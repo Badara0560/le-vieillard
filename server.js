@@ -27,11 +27,14 @@ const store  = require('./lib/store');
 const notify = require('./lib/notify');
 
 const PORT        = +(process.env.PORT || 8132);
-const REFRESH_MIN = +(process.env.REFRESH_MIN || 8);
+const REFRESH_MIN = +(process.env.REFRESH_MIN || 8);    // website feed refresh
+const PUSH_HOURS  = +(process.env.PUSH_HOURS || 12);     // Telegram digest cadence
 const PUBLIC      = path.join(__dirname, 'public');
 
-const state = { articles: [], updated: null, building: false };
+const state = { articles: [], updated: null, building: false, seeded: false };
 
+/* Refresh the feeds for the WEBSITE (frequent — keeps the site current).
+   This does NOT push to Telegram; that's on its own slow cadence below. */
 async function refresh(){
   if (state.building) return;
   state.building = true;
@@ -40,8 +43,10 @@ async function refresh(){
     if (articles.length) {
       state.articles = articles;
       state.updated = new Date().toISOString();
-      const res = await notify.pushBreaking(articles);
-      console.log(`[refresh] ${articles.length} articles @ ${state.updated} | push: ${JSON.stringify(res)}`);
+      // On first successful build, mark everything seen so the first digest
+      // doesn't blast the existing backlog.
+      if (!state.seeded) { notify.markSeen(articles); state.seeded = true; }
+      console.log(`[refresh] ${articles.length} articles @ ${state.updated}`);
     } else {
       console.warn('[refresh] no articles built (feeds unreachable?)');
     }
@@ -49,6 +54,16 @@ async function refresh(){
     console.error('[refresh] error:', e.message);
   } finally {
     state.building = false;
+  }
+}
+
+/* Push a digest to Telegram (slow cadence — e.g. every 12h). */
+async function pushCycle(){
+  try {
+    const res = await notify.pushDigest(state.articles, PUSH_HOURS);
+    console.log(`[push] ${new Date().toISOString()} | ${JSON.stringify(res)}`);
+  } catch (e) {
+    console.error('[push] error:', e.message);
   }
 }
 
@@ -161,7 +176,8 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log(`\n  Le Vieillard running → http://localhost:${PORT}`);
   console.log(`  News app: /   ·   Subscribe: /subscribe   ·   API: /api/news`);
-  console.log(`  Push configured: ${notify.isConfigured()} | refresh every ${REFRESH_MIN} min\n`);
+  console.log(`  Push configured: ${notify.isConfigured()} | feed refresh ${REFRESH_MIN} min | Telegram digest every ${PUSH_HOURS}h\n`);
   refresh();
   setInterval(refresh, REFRESH_MIN * 60 * 1000);
+  setInterval(pushCycle, PUSH_HOURS * 3600 * 1000);
 });
