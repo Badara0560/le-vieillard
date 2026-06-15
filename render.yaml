@@ -1,0 +1,25 @@
+# Render Blueprint — auto-configures the service when you connect this repo.
+# Telegram/WhatsApp secrets are left blank here (sync:false) and set in the
+# Render dashboard so they never live in git.
+services:
+  - type: web
+    name: le-vieillard
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/status
+    autoDeploy: true
+    envVars:
+      - key: REFRESH_MIN
+        value: "8"
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_USERNAME
+        sync: false
+      - key: TELEGRAM_CHANNEL
+        sync: false
+      - key: WHATSAPP_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_ID
+        sync: false
