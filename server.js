@@ -12,8 +12,12 @@ const path = require('path');
   try {
     const txt = fs.readFileSync(path.join(__dirname, '.env'), 'utf8');
     for (const line of txt.split('\n')) {
-      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
-      if (m && !(m[1] in process.env)) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)$/);
+      if (!m || (m[1] in process.env)) continue;
+      let val = m[2];
+      if (/^["']/.test(val)) val = val.replace(/^(['"])(.*?)\1.*$/, '$2');   // quoted value
+      else val = val.replace(/\s+#.*$/, '').trim();                          // strip inline comment
+      process.env[m[1]] = val;
     }
   } catch { /* no .env — fine */ }
 })();

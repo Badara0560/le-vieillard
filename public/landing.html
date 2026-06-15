@@ -38,14 +38,6 @@
   .hero h1 .accent{color:var(--gold)}
   .hero p.sub{color:var(--ink-soft);font-size:1.12rem;max-width:54ch;margin:18px auto 0}
 
-  .channels{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:520px;margin:36px auto 0}
-  .chan{border:2px solid var(--line);background:var(--bg-soft);border-radius:16px;padding:20px;cursor:pointer;text-align:center;transition:.18s;position:relative}
-  .chan:hover{transform:translateY(-3px)}
-  .chan.sel{border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,146,15,.18)}
-  .chan .ic{font-size:2rem}
-  .chan h3{font-size:1.1rem;margin-top:6px}
-  .chan small{color:var(--ink-soft);font-size:.82rem}
-  .chan.wa .ic{color:var(--wa)} .chan.tg .ic{color:var(--tg)}
 
   .card{max-width:520px;margin:18px auto 0;background:var(--bg-soft);border:1px solid var(--line);border-radius:16px;padding:26px}
   label{display:block;font-size:.8rem;font-weight:600;color:var(--ink-soft);margin:0 0 6px}
@@ -56,8 +48,12 @@
     color:#fff;background:var(--brand);cursor:pointer;transition:.15s}
   .submit:hover{background:#9d0f17}
   .submit:disabled{opacity:.5;cursor:default}
-  .tg-join{display:block;text-align:center;background:var(--tg);color:#fff;font-weight:700;padding:14px;border-radius:10px;margin-bottom:14px}
+  .tg-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(34,158,217,.15);color:var(--tg);
+    font-weight:700;font-size:.8rem;padding:6px 14px;border-radius:999px;margin-bottom:16px}
+  .tg-join{display:block;text-align:center;background:var(--tg);color:#fff;font-weight:700;padding:15px;border-radius:10px;margin-bottom:16px;font-size:1.02rem}
   .tg-join:hover{filter:brightness(1.08)}
+  .tg-soon{font-size:.86rem;color:var(--ink-soft);background:rgba(34,158,217,.08);border:1px solid var(--line);
+    border-radius:10px;padding:12px 14px;margin-bottom:16px;text-align:center}
   .note{font-size:.8rem;color:var(--ink-soft);margin-top:14px;text-align:center}
   .msg{text-align:center;padding:14px;border-radius:10px;margin-top:14px;font-weight:600;display:none}
   .msg.ok{display:block;background:rgba(27,107,70,.18);color:#7fdcab;border:1px solid var(--green)}
@@ -70,7 +66,7 @@
   .feat p{color:var(--ink-soft);font-size:.9rem}
 
   footer{border-top:1px solid var(--line);text-align:center;padding:26px 0;color:var(--ink-soft);font-size:.8rem;margin-top:40px}
-  @media(max-width:620px){.channels{grid-template-columns:1fr}.feats{grid-template-columns:1fr;gap:26px}}
+  @media(max-width:620px){.feats{grid-template-columns:1fr;gap:26px}}
 </style>
 </head>
 <body>
@@ -85,19 +81,16 @@
 
 <section class="hero"><div class="wrap">
   <span class="pulse"><span class="dot"></span><span data-i18n="badge">ALERTES EN DIRECT</span></span>
-  <h1 data-i18n="title">Recevez la <span class="accent">dernière minute</span> sur WhatsApp ou Telegram</h1>
+  <h1 data-i18n="title">Recevez la <span class="accent">dernière minute</span> sur Telegram</h1>
   <p class="sub" data-i18n="sub">Dès qu'une information de dernière minute tombe sur le Mali, le Sahel et l'Afrique, nous vous envoyons le titre, un résumé et le lien — automatiquement.</p>
 
-  <div class="channels" id="channels">
-    <div class="chan wa sel" data-c="whatsapp"><div class="ic">🟢</div><h3>WhatsApp</h3><small data-i18n="waSmall">Recevez les alertes par message</small></div>
-    <div class="chan tg" data-c="telegram"><div class="ic">✈️</div><h3>Telegram</h3><small data-i18n="tgSmall">Via notre bot / canal</small></div>
-  </div>
-
   <div class="card">
+    <div class="tg-badge">✈️ Telegram</div>
     <a class="tg-join" id="tgJoin" style="display:none" target="_blank" rel="noopener" data-i18n="tgJoin">Rejoindre le canal Telegram →</a>
+    <p class="tg-soon" id="tgSoon" data-i18n="tgSoon" style="display:none">Les alertes Telegram arrivent très bientôt. Laissez votre contact pour être prévenu dès l'ouverture.</p>
 
-    <label id="contactLabel" data-i18n="phoneLabel">Numéro WhatsApp (avec indicatif)</label>
-    <input id="contact" type="text" placeholder="+223 70 00 00 00" autocomplete="tel">
+    <label id="contactLabel" data-i18n="tgLabel">Votre numéro ou pseudo Telegram (optionnel)</label>
+    <input id="contact" type="text" placeholder="@pseudo / +223…" autocomplete="tel">
 
     <label data-i18n="nameLabel">Prénom (optionnel)</label>
     <input id="name" type="text" placeholder="Aïssata" autocomplete="given-name">
@@ -118,11 +111,11 @@
 <script>
 const I18N={
   fr:{back:"← Retour à l'actualité",badge:"ALERTES EN DIRECT",
-      title:'Recevez la <span class="accent">dernière minute</span> sur WhatsApp ou Telegram',
+      title:'Recevez la <span class="accent">dernière minute</span> sur Telegram',
       sub:"Dès qu'une information de dernière minute tombe sur le Mali, le Sahel et l'Afrique, nous vous envoyons le titre, un résumé et le lien — automatiquement.",
-      waSmall:"Recevez les alertes par message",tgSmall:"Via notre bot / canal",
-      tgJoin:"Rejoindre le canal Telegram →",
-      phoneLabel:"Numéro WhatsApp (avec indicatif)",tgLabel:"Votre numéro ou pseudo Telegram (optionnel)",
+      tgJoin:"Rejoindre sur Telegram →",
+      tgSoon:"Les alertes Telegram arrivent très bientôt. Laissez votre contact pour être prévenu dès l'ouverture.",
+      tgLabel:"Votre numéro ou pseudo Telegram (optionnel)",
       nameLabel:"Prénom (optionnel)",submit:"M'abonner aux alertes",
       note:"Gratuit. Désabonnement à tout moment. Nous n'envoyons que les informations de dernière minute.",
       f1t:"Instantané",f1b:"Push automatique dès qu'une alerte tombe.",
@@ -133,11 +126,11 @@ const I18N={
       already:"ℹ️ Vous êtes déjà abonné.",errMsg:"Une erreur est survenue. Réessayez.",
       tgInstr:"Ouvrez notre bot Telegram et envoyez /start pour activer vos alertes."},
   en:{back:"← Back to the news",badge:"LIVE ALERTS",
-      title:'Get <span class="accent">breaking news</span> on WhatsApp or Telegram',
+      title:'Get <span class="accent">breaking news</span> on Telegram',
       sub:"The moment breaking news hits Mali, the Sahel and Africa, we send you the headline, a summary and the link — automatically.",
-      waSmall:"Get alerts by message",tgSmall:"Via our bot / channel",
-      tgJoin:"Join the Telegram channel →",
-      phoneLabel:"WhatsApp number (with country code)",tgLabel:"Your Telegram number or handle (optional)",
+      tgJoin:"Join on Telegram →",
+      tgSoon:"Telegram alerts are coming very soon. Leave your contact to be notified the moment it opens.",
+      tgLabel:"Your Telegram number or handle (optional)",
       nameLabel:"First name (optional)",submit:"Subscribe to alerts",
       note:"Free. Unsubscribe anytime. We only send breaking news.",
       f1t:"Instant",f1b:"Automatic push the moment an alert breaks.",
@@ -149,8 +142,8 @@ const I18N={
       tgInstr:"Open our Telegram bot and send /start to activate your alerts."}
 };
 let LANG=localStorage.getItem("lv-lang")||"fr";
-let CHANNEL="whatsapp";
-let CONFIG={telegramBot:"",telegramChannel:"",whatsappEnabled:false};
+const CHANNEL="telegram";
+let CONFIG={telegramBot:"",telegramChannel:""};
 
 function applyI18n(){
   document.documentElement.lang=LANG;
@@ -162,26 +155,25 @@ function applyI18n(){
   updateContactLabel();
 }
 function updateContactLabel(){
-  const lab=document.getElementById("contactLabel");
-  const inp=document.getElementById("contact");
-  if(CHANNEL==="telegram"){lab.textContent=I18N[LANG].tgLabel;inp.placeholder="@pseudo / +223…";}
-  else{lab.textContent=I18N[LANG].phoneLabel;inp.placeholder="+223 70 00 00 00";}
+  document.getElementById("contactLabel").textContent=I18N[LANG].tgLabel;
+  document.getElementById("contact").placeholder="@pseudo / +223…";
+}
+
+/* show the "Join Telegram" button once the bot/channel is configured,
+   otherwise show the "coming soon" note */
+function applyConfig(){
+  const join=document.getElementById("tgJoin"), soon=document.getElementById("tgSoon");
+  if(CONFIG.telegramChannel||CONFIG.telegramBot){
+    join.href=CONFIG.telegramChannel?("https://t.me/"+CONFIG.telegramChannel)
+             :("https://t.me/"+CONFIG.telegramBot+"?start=subscribe");
+    join.style.display="block"; soon.style.display="none";
+  }else{
+    join.style.display="none"; soon.style.display="block";
+  }
 }
 
 document.querySelectorAll("#lang button").forEach(b=>b.addEventListener("click",()=>{
   LANG=b.dataset.l;localStorage.setItem("lv-lang",LANG);applyI18n();
-}));
-
-document.querySelectorAll(".chan").forEach(c=>c.addEventListener("click",()=>{
-  CHANNEL=c.dataset.c;
-  document.querySelectorAll(".chan").forEach(x=>x.classList.toggle("sel",x===c));
-  const join=document.getElementById("tgJoin");
-  if(CHANNEL==="telegram" && (CONFIG.telegramChannel||CONFIG.telegramBot)){
-    join.style.display="block";
-    join.href=CONFIG.telegramChannel?("https://t.me/"+CONFIG.telegramChannel)
-             :("https://t.me/"+CONFIG.telegramBot+"?start=subscribe");
-  } else join.style.display="none";
-  updateContactLabel();
 }));
 
 document.getElementById("submit").addEventListener("click",async()=>{
@@ -189,7 +181,6 @@ document.getElementById("submit").addEventListener("click",async()=>{
   const contact=document.getElementById("contact").value.trim();
   const name=document.getElementById("name").value.trim();
   msg.className="msg";
-  if(!contact && CHANNEL==="whatsapp"){msg.classList.add("err");msg.textContent=I18N[LANG].errMsg;msg.style.display="block";return;}
   btn.disabled=true;
   try{
     const r=await fetch("/api/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},
@@ -204,8 +195,9 @@ document.getElementById("submit").addEventListener("click",async()=>{
   btn.disabled=false;
 });
 
-fetch("/api/config").then(r=>r.json()).then(c=>{CONFIG=c||CONFIG;}).catch(()=>{});
+fetch("/api/config").then(r=>r.json()).then(c=>{CONFIG=c||CONFIG;applyConfig();}).catch(()=>{applyConfig();});
 applyI18n();
+applyConfig();
 </script>
 </body>
 </html>
