@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Le Vieillard">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1c1913"/>
+      <stop offset="1" stop-color="#100e0a"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#bg)"/>
+  <rect x="0" y="0" width="800" height="7" fill="#b8121b"/>
+  <rect x="0" y="493" width="800" height="7" fill="#c8920f"/>
+  <text x="400" y="248" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="800" font-size="82" fill="#f4f1e9">Le <tspan fill="#b8121b">Vieillard</tspan></text>
+  <line x1="270" y1="288" x2="530" y2="288" stroke="#3a352a" stroke-width="1.5"/>
+  <text x="400" y="318" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="18" letter-spacing="7" fill="#8a8275">L'AFRIQUE AU QUOTIDIEN</text>
+</svg>

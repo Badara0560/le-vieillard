@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Vieillard — L'actualité de l'Afrique & du Mali</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;0,900;1,500&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff;
+    --bg-soft:#f6f4ef;
+    --bg-card:#ffffff;
+    --ink:#15130f;
+    --ink-soft:#5a554c;
+    --line:#e4e0d6;
+    --brand:#b8121b;        /* breaking red */
+    --gold:#c8920f;         /* sahel gold accent */
+    --green:#1b6b46;        /* africa green */
+    --hero-tint:#0f0d0a;
+    --serif:'Playfair Display',Georgia,serif;
+    --sans:'Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --maxw:1240px;
+    --radius:10px;
+    --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 28px rgba(0,0,0,.06);
+  }
+  html[data-theme="dark"]{
+    --bg:#16140f;
+    --bg-soft:#1e1b15;
+    --bg-card:#201d16;
+    --ink:#f4f1e9;
+    --ink-soft:#a9a294;
+    --line:#332f26;
+    --hero-tint:#000000;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--ink);font-family:var(--sans);
+    line-height:1.55;-webkit-font-smoothing:antialiased;
+    transition:background .3s,color .3s;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+
+  /* ---------- Breaking ticker ---------- */
+  .ticker{background:var(--brand);color:#fff;overflow:hidden;white-space:nowrap;display:flex;align-items:center;position:relative}
+  .ticker__label{background:#000;color:#fff;font-weight:700;font-size:.72rem;letter-spacing:.12em;
+    text-transform:uppercase;padding:9px 16px;flex:none;display:flex;align-items:center;gap:7px;position:relative;z-index:3;box-shadow:6px 0 10px rgba(0,0,0,.35)}
+  .ticker__label .dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:pulse 1.1s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+  .ticker__track{display:inline-flex;gap:48px;padding-left:48px;animation:scroll 90s linear infinite;font-size:.86rem;font-weight:500}
+  .ticker:hover .ticker__track{animation-play-state:paused}
+  .ticker__track span::before{content:"●";color:var(--gold);margin-right:14px;font-size:.6rem;vertical-align:middle}
+  @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  /* ---------- Masthead ---------- */
+  .topbar{border-bottom:1px solid var(--line);font-size:.78rem;color:var(--ink-soft)}
+  .topbar .wrap{display:flex;justify-content:space-between;align-items:center;height:40px}
+  .topbar__right{display:flex;align-items:center;gap:14px}
+  .pill-btn{border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;
+    font-family:var(--sans);font-size:.74rem;font-weight:600;padding:5px 11px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;transition:.15s}
+  .pill-btn:hover{border-color:var(--ink);background:var(--bg-soft)}
+  .pill-btn.cta{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .pill-btn.cta:hover{background:#9d0f17;border-color:#9d0f17}
+  .updated-note{font-size:.72rem;color:var(--ink-soft)}
+  .lang-toggle{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .lang-toggle button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;
+    font-family:var(--sans);font-weight:700;font-size:.72rem;padding:5px 12px;transition:.15s}
+  .lang-toggle button.active{background:var(--ink);color:var(--bg)}
+
+  .masthead{text-align:center;padding:26px 0 16px}
+  .masthead h1{font-family:var(--serif);font-weight:900;font-size:clamp(2.4rem,6vw,4.4rem);
+    letter-spacing:-.02em;line-height:.95}
+  .masthead h1 .accent{color:var(--brand)}
+  .masthead .tag{margin-top:8px;font-size:.8rem;letter-spacing:.32em;text-transform:uppercase;color:var(--ink-soft)}
+
+  /* ---------- Nav ---------- */
+  nav.cats{border-top:2px solid var(--ink);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50;
+    background:var(--bg);backdrop-filter:saturate(1.1) blur(6px)}
+  nav.cats .wrap{display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:none}
+  nav.cats .wrap::-webkit-scrollbar{display:none}
+  .cat{background:none;border:none;cursor:pointer;font-family:var(--sans);font-weight:600;font-size:.82rem;
+    color:var(--ink-soft);padding:13px 14px;white-space:nowrap;border-bottom:3px solid transparent;transition:.15s;text-transform:uppercase;letter-spacing:.04em}
+  .cat:hover{color:var(--ink)}
+  .cat.active{color:var(--ink);border-bottom-color:var(--brand)}
+  .cat.mali{color:var(--green)}
+  .cat.mali.active{border-bottom-color:var(--green)}
+
+  .searchbar{margin-left:auto;display:flex;align-items:center}
+  .searchbar input{border:none;background:var(--bg-soft);border-radius:999px;padding:8px 14px;
+    font-family:var(--sans);font-size:.82rem;color:var(--ink);width:150px;transition:.2s}
+  .searchbar input:focus{outline:none;width:210px;box-shadow:0 0 0 2px var(--gold)}
+
+  /* ---------- Layout ---------- */
+  main{padding:30px 0 60px}
+  .section-head{display:flex;align-items:center;gap:14px;margin:38px 0 18px}
+  .section-head h2{font-family:var(--serif);font-weight:800;font-size:1.55rem;letter-spacing:-.01em;white-space:nowrap}
+  .section-head .bar{height:3px;background:var(--ink);flex:1;opacity:.12}
+  .section-head .count{font-size:.74rem;color:var(--ink-soft);font-weight:600}
+  .see-all{background:none;border:none;cursor:pointer;font-family:var(--sans);font-weight:700;font-size:.78rem;
+    color:var(--brand);white-space:nowrap;letter-spacing:.02em;transition:.15s}
+  .see-all:hover{opacity:.7}
+  .mali-flag{display:inline-flex;height:18px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+  .mali-flag i{width:8px}.mali-flag i:nth-child(1){background:#14b53a}.mali-flag i:nth-child(2){background:#fcd116}.mali-flag i:nth-child(3){background:#ce1126}
+
+  /* Hero */
+  .hero{display:grid;grid-template-columns:1.7fr 1fr;gap:26px;margin-bottom:10px}
+  .lead{position:relative;border-radius:var(--radius);overflow:hidden;min-height:440px;
+    display:flex;align-items:flex-end;color:#fff;box-shadow:var(--shadow);cursor:pointer}
+  .lead img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:.5s}
+  .lead:hover img{transform:scale(1.04)}
+  .lead::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,var(--hero-tint) 8%,rgba(0,0,0,.15) 60%,transparent)}
+  .lead__body{position:relative;z-index:2;padding:30px}
+  .lead__body h3{font-family:var(--serif);font-weight:800;font-size:clamp(1.6rem,3vw,2.5rem);line-height:1.04;margin:10px 0}
+  .lead__body p{font-size:1rem;color:#e9e6df;max-width:60ch}
+  .hero__side{display:flex;flex-direction:column;gap:18px}
+  .side-card{display:grid;grid-template-columns:1fr 96px;gap:14px;cursor:pointer;border-bottom:1px solid var(--line);padding-bottom:18px}
+  .side-card:last-child{border-bottom:none;padding-bottom:0}
+  .side-card img{width:96px;height:78px;object-fit:cover;border-radius:8px}
+  .side-card h4{font-family:var(--serif);font-weight:700;font-size:1.04rem;line-height:1.15;transition:.15s}
+  .side-card:hover h4{color:var(--brand)}
+
+  /* Badges + meta */
+  .kicker{display:inline-flex;align-items:center;gap:7px;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+  .kicker .cat-tag{color:var(--gold)}
+  .lead .kicker .cat-tag{color:#ffd66b}
+  .badge-live{background:var(--brand);color:#fff;padding:2px 7px;border-radius:4px;font-size:.62rem;letter-spacing:.1em}
+  .meta{font-size:.74rem;color:var(--ink-soft);margin-top:7px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .meta .src{font-weight:600;color:var(--ink)}
+  .tr-mark{cursor:help;opacity:.7;font-size:.8rem}
+
+  /* Grid cards */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .card{background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+    cursor:pointer;display:flex;flex-direction:column;transition:.18s;box-shadow:var(--shadow)}
+  .card:hover{transform:translateY(-4px);border-color:var(--gold)}
+  .card .thumb{position:relative;aspect-ratio:16/10;overflow:hidden}
+  .card .thumb img{width:100%;height:100%;object-fit:cover;transition:.5s}
+  .card:hover .thumb img{transform:scale(1.05)}
+  .card .cat-flag{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.62);color:#fff;
+    font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:5px;backdrop-filter:blur(3px)}
+  .card .body{padding:16px 17px 18px;display:flex;flex-direction:column;flex:1}
+  .card h3{font-family:var(--serif);font-weight:700;font-size:1.18rem;line-height:1.18;margin-bottom:8px;transition:.15s}
+  .card:hover h3{color:var(--brand)}
+  .card p{font-size:.9rem;color:var(--ink-soft);flex:1}
+  .card .meta{margin-top:12px}
+
+  .mali-band{background:var(--bg-soft);border-radius:16px;padding:6px 26px 30px;margin-top:10px;border:1px solid var(--line)}
+
+  .more-wrap{display:flex;justify-content:center;margin:30px 0 0}
+  .more-btn{background:transparent;border:1px solid var(--line);color:var(--ink);cursor:pointer;
+    font-family:var(--sans);font-weight:700;font-size:.9rem;padding:13px 28px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:9px;transition:.15s}
+  .more-btn:hover{border-color:var(--brand);color:var(--brand);background:var(--bg-soft)}
+  .more-count{background:var(--brand);color:#fff;font-size:.72rem;padding:2px 8px;border-radius:999px}
+  .empty{text-align:center;padding:70px 20px;color:var(--ink-soft)}
+  .empty h3{font-family:var(--serif);font-size:1.6rem;color:var(--ink);margin-bottom:6px}
+
+  /* Footer */
+  footer{border-top:2px solid var(--ink);background:var(--bg-soft);padding:40px 0;margin-top:30px}
+  .foot{display:grid;grid-template-columns:2fr 1fr 1fr;gap:30px}
+  .foot h4{font-family:var(--serif);font-size:1.5rem;margin-bottom:8px}
+  .foot h4 .accent{color:var(--brand)}
+  .foot p,.foot a{font-size:.85rem;color:var(--ink-soft);display:block;margin-bottom:6px}
+  .foot a:hover{color:var(--brand)}
+  .foot strong{color:var(--ink);font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:12px}
+  .foot-note{text-align:center;font-size:.74rem;color:var(--ink-soft);margin-top:30px;border-top:1px solid var(--line);padding-top:18px}
+
+  /* ---------- Article modal ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(10,8,5,.6);backdrop-filter:blur(4px);z-index:200;
+    display:none;align-items:flex-start;justify-content:center;padding:40px 18px;overflow-y:auto}
+  .overlay.open{display:flex}
+  .article{background:var(--bg);max-width:760px;width:100%;border-radius:14px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.4);animation:rise .3s ease}
+  @keyframes rise{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+  .article__hero{position:relative;aspect-ratio:16/9}
+  .article__hero img{width:100%;height:100%;object-fit:cover}
+  .article__close{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;border:none;
+    background:rgba(0,0,0,.55);color:#fff;font-size:1.2rem;cursor:pointer;display:grid;place-items:center}
+  .article__close:hover{background:#000}
+  .article__inner{padding:28px 32px 36px}
+  .article__inner h2{font-family:var(--serif);font-weight:800;font-size:2rem;line-height:1.1;margin:10px 0 12px}
+  .article__inner .body-txt{font-size:1.04rem;color:var(--ink);line-height:1.75}
+  .article__inner .body-txt p{margin-bottom:16px}
+  .article__inner .src-link{display:inline-block;margin-top:8px;color:var(--brand);font-weight:600;font-size:.9rem}
+
+  @media(max-width:900px){
+    .hero{grid-template-columns:1fr}
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .searchbar{display:none}
+  }
+  @media(max-width:580px){
+    .grid{grid-template-columns:1fr}
+    .lead{min-height:340px}
+  }
+</style>
+</head>
+<body>
+
+<!-- BREAKING TICKER -->
+<div class="ticker">
+  <div class="ticker__label"><span class="dot"></span><span data-i18n="breaking">DERNIÈRE MINUTE</span></div>
+  <div class="ticker__track" id="ticker"></div>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="wrap">
+    <span id="dateline"></span>
+    <div class="topbar__right">
+      <div class="lang-toggle" id="langToggle">
+        <button data-lang="fr" class="active">FR</button>
+        <button data-lang="en">EN</button>
+      </div>
+      <button class="pill-btn" id="themeBtn"><span id="themeIcon">🌙</span><span data-i18n="theme">Sombre</span></button>
+      <button class="pill-btn" id="refreshBtn">⟳ <span data-i18n="refresh">Actualiser</span></button>
+      <a class="pill-btn cta" href="/subscribe" data-i18n="alertsCta">🔔 Alertes</a>
+    </div>
+  </div>
+</div>
+
+<!-- MASTHEAD -->
+<header class="masthead wrap">
+  <h1>Le <span class="accent">Vieillard</span></h1>
+  <div class="tag" data-i18n="slogan">L'AFRIQUE AU QUOTIDIEN</div>
+</header>
+
+<!-- CATEGORY NAV -->
+<nav class="cats">
+  <div class="wrap" id="catNav"></div>
+</nav>
+
+<main class="wrap" id="main"></main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap foot">
+    <div>
+      <h4>Le <span class="accent">Vieillard</span></h4>
+      <p data-i18n="footAbout">Une agrégation indépendante de l'actualité africaine, avec une couverture approfondie du Mali et du Sahel. Politique, économie, culture et sport — chaque jour.</p>
+    </div>
+    <div>
+      <strong data-i18n="footSections">Rubriques</strong>
+      <a data-i18n="cat_mali">Mali</a>
+      <a data-i18n="cat_politics">Politique</a>
+      <a data-i18n="cat_economy">Économie</a>
+      <a data-i18n="cat_sport">Sport</a>
+    </div>
+    <div>
+      <strong data-i18n="footSources">Sources</strong>
+      <a>RFI · France 24 · BBC Africa</a><a>Jeune Afrique · Al Jazeera</a><a>AllAfrica · Le Soft Post</a><a>Maliweb · Studio Tamani</a>
+    </div>
+  </div>
+  <div class="wrap foot-note">
+    <span data-i18n="footNote">© 2026 Sahel Tribune — Démonstration avec contenu illustratif. Connectez les flux RSS pour l'actualité en direct.</span>
+  </div>
+</footer>
+
+<!-- ARTICLE MODAL -->
+<div class="overlay" id="overlay">
+  <article class="article" id="articleBox"></article>
+</div>
+
+<script>
+/* =====================================================================
+   LE VIEILLARD — frontend. Talks to the Node backend:
+     GET /api/news               → list (title/excerpt pre-translated FR+EN)
+     GET /api/article/:id?lang=  → full body translated on demand
+   No client-side RSS/translation: the server fetches, cleans, translates
+   and caches everything.
+   ===================================================================== */
+
+const I18N = {
+  fr:{breaking:"DERNIÈRE MINUTE",theme:"Sombre",refresh:"Actualiser",alertsCta:"🔔 Alertes",
+      slogan:"L'AFRIQUE AU QUOTIDIEN",
+      cat_all:"À la une",cat_mali:"Mali",cat_sahel:"Sahel",cat_politics:"Politique",
+      cat_economy:"Économie",cat_culture:"Culture",cat_sport:"Sport",cat_tech:"Tech",cat_world:"Afrique & Monde",
+      maliTitle:"L'actualité du Mali",moreFrom:"Plus d'articles",showMore:"Voir plus",seeAll:"Tout voir →",
+      footAbout:"Une agrégation indépendante de l'actualité africaine, avec une couverture approfondie du Mali et du Sahel. Politique, économie, culture et sport — chaque jour.",
+      footSections:"Rubriques",footSources:"Sources",
+      footNote:"© 2026 Le Vieillard — Actualité agrégée en direct depuis des flux RSS publics (backend Node). Les images peuvent être illustratives.",
+      search:"Rechercher…",readSource:"Lire à la source ↗",emptyT:"Aucun article",emptyB:"Aucun résultat pour cette recherche.",
+      live:"DIRECT",updated:"Mis à jour",
+      loadingT:"Chargement de l'actualité…",loadingB:"Récupération des flux en direct",
+      errT:"Serveur indisponible",errB:"Démarrez le backend : node server.js"},
+  en:{breaking:"BREAKING NEWS",theme:"Dark",refresh:"Refresh",alertsCta:"🔔 Alerts",
+      slogan:"AFRICA DAILY",
+      cat_all:"Top stories",cat_mali:"Mali",cat_sahel:"Sahel",cat_politics:"Politics",
+      cat_economy:"Economy",cat_culture:"Culture",cat_sport:"Sports",cat_tech:"Tech",cat_world:"Africa & World",
+      maliTitle:"Mali in focus",moreFrom:"More stories",showMore:"Show more",seeAll:"See all →",
+      footAbout:"An independent aggregation of African news, with in-depth coverage of Mali and the Sahel. Politics, economy, culture and sport — every day.",
+      footSections:"Sections",footSources:"Sources",
+      footNote:"© 2026 Le Vieillard — Live news aggregated from public RSS feeds (Node backend). Images may be illustrative.",
+      search:"Search…",readSource:"Read at source ↗",emptyT:"No articles",emptyB:"No results for this search.",
+      live:"LIVE",updated:"Updated",
+      loadingT:"Loading the news…",loadingB:"Fetching live feeds",
+      errT:"Server unavailable",errB:"Start the backend: node server.js"}
+};
+
+const CATS = ["all","mali","sahel","world","politics","economy","culture","sport","tech"];
+
+/* broken/hotlink-protected feed images fall back to the branded placeholder */
+window.imgFallback=function(el){el.onerror=null;el.src="/placeholder.svg";};
+
+/* ---------- state ---------- */
+let LANG=localStorage.getItem("lv-lang")||"fr";
+let CAT="all", QUERY="", ARTICLES=[], UPDATED=null;
+let LIMIT=6;                 // cards shown before "Voir plus"
+const PAGE=6;
+
+/* ---------- helpers ---------- */
+const t=k=>I18N[LANG][k]||k;
+function timeAgo(min){
+  if(min<60) return LANG==="fr"?`il y a ${min} min`:`${min} min ago`;
+  const h=Math.floor(min/60);
+  if(h<24) return LANG==="fr"?`il y a ${h} h`:`${h} h ago`;
+  const d=Math.floor(h/24);
+  return LANG==="fr"?`il y a ${d} j`:`${d} d ago`;
+}
+function fmtDate(){
+  const opts={weekday:"long",year:"numeric",month:"long",day:"numeric"};
+  return new Date().toLocaleDateString(LANG==="fr"?"fr-FR":"en-GB",opts);
+}
+function disp(a){return a[LANG]||a.fr;}
+function isTranslated(a){return a.srcLang && a.srcLang!==LANG;}
+function trMark(a){return isTranslated(a)?`<span class="tr-mark" title="${LANG==="fr"?"Traduit automatiquement":"Auto-translated"}">🌐</span>`:"";}
+
+/* ---------- data ---------- */
+async function getArticles(){
+  const r=await fetch("/api/news");
+  if(!r.ok) throw new Error("api "+r.status);
+  const j=await r.json();
+  UPDATED=j.updated;
+  return j.articles.map(a=>({...a,time:a.ageMin}));
+}
+
+/* ---------- rendering ---------- */
+function articleCard(a){
+  const d=disp(a);
+  return `<article class="card" data-id="${a.id}">
+    <div class="thumb">
+      <img loading="lazy" src="${a.img}" alt="" onerror="imgFallback(this,'${a.cat}')">
+      <span class="cat-flag">${a.cat==="mali"?"🇲🇱 ":""}${t("cat_"+a.cat)}</span>
+    </div>
+    <div class="body">
+      <span class="kicker"><span class="cat-tag">${a.source}</span>${a.breaking?`<span class="badge-live">${t("live")}</span>`:""}</span>
+      <h3>${d.title}</h3>
+      <p>${d.excerpt}</p>
+      <div class="meta"><span class="src">${a.source}</span><span>·</span><span>${timeAgo(a.time)}</span>${trMark(a)}</div>
+    </div>
+  </article>`;
+}
+
+/* a card grid limited to LIMIT, with a "Voir plus" button for the rest */
+function gridWithMore(items){
+  const shown=items.slice(0,LIMIT);
+  let h=`<div class="grid">${shown.map(articleCard).join("")}</div>`;
+  if(items.length>LIMIT){
+    h+=`<div class="more-wrap"><button class="more-btn" id="moreBtn">${t("showMore")} <span class="more-count">+${items.length-LIMIT}</span></button></div>`;
+  }
+  return h;
+}
+function render(){
+  const main=document.getElementById("main");
+  const list=ARTICLES.filter(a=>{
+    const okCat=CAT==="all"||a.cat===CAT;
+    const d=disp(a);
+    const okQ=!QUERY||(d.title+d.excerpt+a.source).toLowerCase().includes(QUERY.toLowerCase());
+    return okCat&&okQ;
+  });
+
+  if(!ARTICLES.length){
+    main.innerHTML=`<div class="empty"><h3>${t("loadingT")}</h3><p>${t("loadingB")}</p></div>`;
+    return;
+  }
+  if(!list.length){
+    main.innerHTML=`<div class="empty"><h3>${t("emptyT")}</h3><p>${t("emptyB")}</p></div>`;
+    return;
+  }
+
+  let html="";
+  if(CAT==="all" && !QUERY){
+    const lead=list.find(a=>a.lead)||list[0];
+    const side=list.filter(a=>a!==lead).slice(0,3);
+    const ld=disp(lead);
+    html+=`<section class="hero">
+      <div class="lead" data-id="${lead.id}">
+        <img src="${lead.img}" alt="" onerror="imgFallback(this,'${lead.cat}')">
+        <div class="lead__body">
+          <span class="kicker">${lead.breaking?`<span class="badge-live">${t("live")}</span>`:""}<span class="cat-tag">${lead.cat==="mali"?"🇲🇱 ":""}${t("cat_"+lead.cat)}</span></span>
+          <h3>${ld.title}</h3>
+          <p>${ld.excerpt}</p>
+          <div class="meta" style="color:#d9d4cc"><span class="src" style="color:#fff">${lead.source}</span><span>·</span><span>${timeAgo(lead.time)}</span></div>
+        </div>
+      </div>
+      <div class="hero__side">
+        ${side.map(a=>{const d=disp(a);return `<div class="side-card" data-id="${a.id}">
+          <div><span class="kicker"><span class="cat-tag">${t("cat_"+a.cat)}</span></span><h4>${d.title}</h4>
+          <div class="meta"><span class="src">${a.source}</span><span>·</span><span>${timeAgo(a.time)}</span>${trMark(a)}</div></div>
+          <img loading="lazy" src="${a.img}" alt="" onerror="imgFallback(this,'${a.cat}')"></div>`;}).join("")}
+      </div>
+    </section>`;
+
+    // articles already shown in the hero are excluded from the blocks below
+    const used=new Set([lead.id,...side.map(a=>a.id)]);
+
+    // Mali — prominent band (up to 6)
+    const maliList=ARTICLES.filter(a=>a.cat==="mali" && !used.has(a.id)).slice(0,6);
+    if(maliList.length){
+      maliList.forEach(a=>used.add(a.id));
+      html+=`<div class="section-head">
+        <span class="mali-flag"><i></i><i></i><i></i></span>
+        <h2>${t("maliTitle")}</h2><div class="bar"></div>
+        <button class="see-all" data-go="mali">${t("seeAll")}</button></div>
+        <div class="mali-band"><div class="grid" style="margin-top:22px">${maliList.map(articleCard).join("")}</div></div>`;
+    }
+
+    // themed category blocks (up to 3 each), like a newspaper front page
+    for(const c of ["sahel","world","politics","economy","culture","sport","tech"]){
+      const items=ARTICLES.filter(a=>a.cat===c && !used.has(a.id)).slice(0,3);
+      if(!items.length) continue;
+      items.forEach(a=>used.add(a.id));
+      html+=`<div class="section-head"><h2>${t("cat_"+c)}</h2><div class="bar"></div>
+        <button class="see-all" data-go="${c}">${t("seeAll")}</button></div>
+        <div class="grid">${items.map(articleCard).join("")}</div>`;
+    }
+  } else {
+    const title=CAT==="all"?t("moreFrom"):t("cat_"+CAT);
+    html+=`<div class="section-head">${CAT==="mali"?'<span class="mali-flag"><i></i><i></i><i></i></span>':""}
+      <h2>${title}</h2><div class="bar"></div><span class="count">${list.length} ${LANG==="fr"?"articles":"stories"}</span></div>`
+      + gridWithMore(list);
+  }
+
+  main.innerHTML=html;
+  main.querySelectorAll("[data-id]").forEach(el=>el.addEventListener("click",()=>openArticle(+el.dataset.id)));
+  const moreBtn=document.getElementById("moreBtn");
+  if(moreBtn) moreBtn.addEventListener("click",()=>{LIMIT+=PAGE;render();});
+  main.querySelectorAll(".see-all").forEach(b=>b.addEventListener("click",()=>{
+    CAT=b.dataset.go;LIMIT=PAGE;renderNav();render();window.scrollTo({top:0,behavior:"smooth"});
+  }));
+  renderTicker();
+}
+
+function renderTicker(){
+  const track=document.getElementById("ticker");
+  const items=ARTICLES.filter(a=>a.breaking).map(a=>disp(a).title);
+  if(!items.length){track.innerHTML="";return;}
+  const seq=[...items,...items];
+  track.innerHTML=seq.map(x=>`<span>${x}</span>`).join("");
+  track.style.animationDuration=Math.max(60,items.length*7)+"s"; // calmer scroll, scales with item count
+}
+
+function renderNav(){
+  document.getElementById("catNav").innerHTML=
+    CATS.map(c=>`<button class="cat ${c==="mali"?"mali":""} ${c===CAT?"active":""}" data-cat="${c}">${t("cat_"+c)}</button>`).join("")
+    + `<div class="searchbar"><input id="search" type="search" placeholder="${t("search")}" value="${QUERY}"></div>`;
+  document.querySelectorAll(".cat").forEach(b=>b.addEventListener("click",()=>{CAT=b.dataset.cat;LIMIT=PAGE;renderNav();render();window.scrollTo({top:0,behavior:"smooth"});}));
+  document.getElementById("search").addEventListener("input",e=>{QUERY=e.target.value;LIMIT=PAGE;render();});
+}
+
+function applyI18nStatic(){
+  document.documentElement.lang=LANG;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{
+    const k=el.getAttribute("data-i18n"); if(I18N[LANG][k]) el.textContent=I18N[LANG][k];
+  });
+  document.getElementById("dateline").textContent=fmtDate().replace(/^./,c=>c.toUpperCase());
+}
+
+/* ---------- article modal ---------- */
+function openArticle(id){
+  const a=ARTICLES.find(x=>x.id===id); if(!a)return;
+  const d=disp(a);
+  const needTr=isTranslated(a);
+  document.getElementById("articleBox").innerHTML=`
+    <div class="article__hero"><img src="${a.img}" alt="" onerror="imgFallback(this,'${a.cat}')">
+      <button class="article__close" id="closeArt">×</button></div>
+    <div class="article__inner">
+      <span class="kicker"><span class="cat-tag" style="color:var(--gold)">${a.cat==="mali"?"🇲🇱 ":""}${t("cat_"+a.cat)}</span>${a.breaking?`<span class="badge-live">${t("live")}</span>`:""}${needTr?`<span class="tr-mark" title="${LANG==="fr"?"Traduit automatiquement":"Auto-translated"}">🌐</span>`:""}</span>
+      <h2>${d.title}</h2>
+      <div class="meta"><span class="src">${a.source}</span><span>·</span><span>${timeAgo(a.time)}</span></div>
+      <div class="body-txt" id="artBody" style="margin-top:18px">${(a.body||[]).map(p=>`<p>${p}</p>`).join("")}</div>
+      <a class="src-link" href="${a.url}" target="_blank" rel="noopener">${t("readSource")}</a>
+    </div>`;
+  document.getElementById("overlay").classList.add("open");
+  document.body.style.overflow="hidden";
+  document.getElementById("closeArt").addEventListener("click",closeArticle);
+  if(needTr) loadTranslatedBody(id);
+}
+async function loadTranslatedBody(id){
+  try{
+    const r=await fetch(`/api/article/${id}?lang=${LANG}`);
+    if(!r.ok) return;
+    const j=await r.json();
+    const box=document.getElementById("artBody");
+    if(box && Array.isArray(j.body)) box.innerHTML=j.body.map(p=>`<p>${p}</p>`).join("");
+  }catch(e){/* keep original */}
+}
+function closeArticle(){
+  document.getElementById("overlay").classList.remove("open");
+  document.body.style.overflow="";
+}
+document.getElementById("overlay").addEventListener("click",e=>{if(e.target.id==="overlay")closeArticle();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeArticle();});
+
+/* ---------- controls ---------- */
+function setLang(l){
+  LANG=l;localStorage.setItem("lv-lang",l);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("active",b.dataset.lang===l));
+  applyI18nStatic();renderNav();render();
+}
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.lang)));
+
+function setTheme(th){
+  document.documentElement.dataset.theme=th;localStorage.setItem("lv-theme",th);
+  document.getElementById("themeIcon").textContent=th==="dark"?"☀️":"🌙";
+}
+document.getElementById("themeBtn").addEventListener("click",()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark"));
+
+const refreshBtn=document.getElementById("refreshBtn");
+refreshBtn.addEventListener("click",async()=>{refreshBtn.style.opacity=".5";await load();refreshBtn.style.opacity="1";});
+
+/* ---------- boot ---------- */
+async function load(){
+  try{
+    const data=await getArticles();
+    if(data && data.length){ARTICLES=data;render();}
+  }catch(e){
+    if(!ARTICLES.length){
+      document.getElementById("main").innerHTML=
+        `<div class="empty"><h3>${t("errT")}</h3><p>${t("errB")}</p></div>`;
+    }
+  }
+}
+(function init(){
+  setTheme(localStorage.getItem("lv-theme")||"light");
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("active",b.dataset.lang===LANG));
+  applyI18nStatic();renderNav();
+  document.getElementById("main").innerHTML=`<div class="empty"><h3>${t("loadingT")}</h3><p>${t("loadingB")}</p></div>`;
+  load();
+  setInterval(load,120000); // poll for fresh news every 2 min
+})();
+</script>
+</body>
+</html>

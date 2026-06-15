@@ -1,0 +1,11 @@
+{
+  "name": "le-vieillard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Le Vieillard — bilingual Africa/Mali news app with live RSS, server-side translation, and WhatsApp/Telegram breaking-news alerts.",
+  "type": "commonjs",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server.js"
+  }
+}

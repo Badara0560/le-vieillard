@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Vieillard — L'actualité de l'Afrique & du Mali</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;0,900;1,500&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff;
+    --bg-soft:#f6f4ef;
+    --bg-card:#ffffff;
+    --ink:#15130f;
+    --ink-soft:#5a554c;
+    --line:#e4e0d6;
+    --brand:#b8121b;        /* breaking red */
+    --gold:#c8920f;         /* sahel gold accent */
+    --green:#1b6b46;        /* africa green */
+    --hero-tint:#0f0d0a;
+    --serif:'Playfair Display',Georgia,serif;
+    --sans:'Source Sans 3',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --maxw:1240px;
+    --radius:10px;
+    --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 28px rgba(0,0,0,.06);
+  }
+  html[data-theme="dark"]{
+    --bg:#16140f;
+    --bg-soft:#1e1b15;
+    --bg-card:#201d16;
+    --ink:#f4f1e9;
+    --ink-soft:#a9a294;
+    --line:#332f26;
+    --hero-tint:#000000;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--ink);font-family:var(--sans);
+    line-height:1.55;-webkit-font-smoothing:antialiased;
+    transition:background .3s,color .3s;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+
+  /* ---------- Breaking ticker ---------- */
+  .ticker{background:var(--brand);color:#fff;overflow:hidden;white-space:nowrap;display:flex;align-items:center;position:relative}
+  .ticker__label{background:#000;color:#fff;font-weight:700;font-size:.72rem;letter-spacing:.12em;
+    text-transform:uppercase;padding:9px 16px;flex:none;display:flex;align-items:center;gap:7px;position:relative;z-index:3;box-shadow:6px 0 10px rgba(0,0,0,.35)}
+  .ticker__label .dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:pulse 1.1s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+  .ticker__track{display:inline-flex;gap:48px;padding-left:48px;animation:scroll 38s linear infinite;font-size:.86rem;font-weight:500}
+  .ticker:hover .ticker__track{animation-play-state:paused}
+  .ticker__track span::before{content:"●";color:var(--gold);margin-right:14px;font-size:.6rem;vertical-align:middle}
+  @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  /* ---------- Masthead ---------- */
+  .topbar{border-bottom:1px solid var(--line);font-size:.78rem;color:var(--ink-soft)}
+  .topbar .wrap{display:flex;justify-content:space-between;align-items:center;height:40px}
+  .topbar__right{display:flex;align-items:center;gap:14px}
+  .pill-btn{border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;
+    font-family:var(--sans);font-size:.74rem;font-weight:600;padding:5px 11px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;transition:.15s}
+  .pill-btn:hover{border-color:var(--ink);background:var(--bg-soft)}
+  .lang-toggle{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .lang-toggle button{border:none;background:transparent;color:var(--ink-soft);cursor:pointer;
+    font-family:var(--sans);font-weight:700;font-size:.72rem;padding:5px 12px;transition:.15s}
+  .lang-toggle button.active{background:var(--ink);color:var(--bg)}
+
+  .masthead{text-align:center;padding:26px 0 16px}
+  .masthead h1{font-family:var(--serif);font-weight:900;font-size:clamp(2.4rem,6vw,4.4rem);
+    letter-spacing:-.02em;line-height:.95}
+  .masthead h1 .accent{color:var(--brand)}
+  .masthead .tag{margin-top:8px;font-size:.8rem;letter-spacing:.32em;text-transform:uppercase;color:var(--ink-soft)}
+
+  /* ---------- Nav ---------- */
+  nav.cats{border-top:2px solid var(--ink);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50;
+    background:var(--bg);backdrop-filter:saturate(1.1) blur(6px)}
+  nav.cats .wrap{display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:none}
+  nav.cats .wrap::-webkit-scrollbar{display:none}
+  .cat{background:none;border:none;cursor:pointer;font-family:var(--sans);font-weight:600;font-size:.82rem;
+    color:var(--ink-soft);padding:13px 14px;white-space:nowrap;border-bottom:3px solid transparent;transition:.15s;text-transform:uppercase;letter-spacing:.04em}
+  .cat:hover{color:var(--ink)}
+  .cat.active{color:var(--ink);border-bottom-color:var(--brand)}
+  .cat.mali{color:var(--green)}
+  .cat.mali.active{border-bottom-color:var(--green)}
+
+  .searchbar{margin-left:auto;display:flex;align-items:center}
+  .searchbar input{border:none;background:var(--bg-soft);border-radius:999px;padding:8px 14px;
+    font-family:var(--sans);font-size:.82rem;color:var(--ink);width:150px;transition:.2s}
+  .searchbar input:focus{outline:none;width:210px;box-shadow:0 0 0 2px var(--gold)}
+
+  /* ---------- Layout ---------- */
+  main{padding:30px 0 60px}
+  .section-head{display:flex;align-items:center;gap:14px;margin:38px 0 18px}
+  .section-head h2{font-family:var(--serif);font-weight:800;font-size:1.55rem;letter-spacing:-.01em;white-space:nowrap}
+  .section-head .bar{height:3px;background:var(--ink);flex:1;opacity:.12}
+  .section-head .count{font-size:.74rem;color:var(--ink-soft);font-weight:600}
+  .mali-flag{display:inline-flex;height:18px;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+  .mali-flag i{width:8px}.mali-flag i:nth-child(1){background:#14b53a}.mali-flag i:nth-child(2){background:#fcd116}.mali-flag i:nth-child(3){background:#ce1126}
+
+  /* Hero */
+  .hero{display:grid;grid-template-columns:1.7fr 1fr;gap:26px;margin-bottom:10px}
+  .lead{position:relative;border-radius:var(--radius);overflow:hidden;min-height:440px;
+    display:flex;align-items:flex-end;color:#fff;box-shadow:var(--shadow);cursor:pointer}
+  .lead img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:.5s}
+  .lead:hover img{transform:scale(1.04)}
+  .lead::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,var(--hero-tint) 8%,rgba(0,0,0,.15) 60%,transparent)}
+  .lead__body{position:relative;z-index:2;padding:30px}
+  .lead__body h3{font-family:var(--serif);font-weight:800;font-size:clamp(1.6rem,3vw,2.5rem);line-height:1.04;margin:10px 0}
+  .lead__body p{font-size:1rem;color:#e9e6df;max-width:60ch}
+  .hero__side{display:flex;flex-direction:column;gap:18px}
+  .side-card{display:grid;grid-template-columns:1fr 96px;gap:14px;cursor:pointer;border-bottom:1px solid var(--line);padding-bottom:18px}
+  .side-card:last-child{border-bottom:none;padding-bottom:0}
+  .side-card img{width:96px;height:78px;object-fit:cover;border-radius:8px}
+  .side-card h4{font-family:var(--serif);font-weight:700;font-size:1.04rem;line-height:1.15;transition:.15s}
+  .side-card:hover h4{color:var(--brand)}
+
+  /* Badges + meta */
+  .kicker{display:inline-flex;align-items:center;gap:7px;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+  .kicker .cat-tag{color:var(--gold)}
+  .lead .kicker .cat-tag{color:#ffd66b}
+  .badge-live{background:var(--brand);color:#fff;padding:2px 7px;border-radius:4px;font-size:.62rem;letter-spacing:.1em}
+  .meta{font-size:.74rem;color:var(--ink-soft);margin-top:7px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .meta .src{font-weight:600;color:var(--ink)}
+  .tr-mark{cursor:help;opacity:.7;font-size:.8rem}
+
+  /* Grid cards */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .card{background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+    cursor:pointer;display:flex;flex-direction:column;transition:.18s;box-shadow:var(--shadow)}
+  .card:hover{transform:translateY(-4px);border-color:var(--gold)}
+  .card .thumb{position:relative;aspect-ratio:16/10;overflow:hidden}
+  .card .thumb img{width:100%;height:100%;object-fit:cover;transition:.5s}
+  .card:hover .thumb img{transform:scale(1.05)}
+  .card .cat-flag{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.62);color:#fff;
+    font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:5px;backdrop-filter:blur(3px)}
+  .card .body{padding:16px 17px 18px;display:flex;flex-direction:column;flex:1}
+  .card h3{font-family:var(--serif);font-weight:700;font-size:1.18rem;line-height:1.18;margin-bottom:8px;transition:.15s}
+  .card:hover h3{color:var(--brand)}
+  .card p{font-size:.9rem;color:var(--ink-soft);flex:1}
+  .card .meta{margin-top:12px}
+
+  .mali-band{background:var(--bg-soft);border-radius:16px;padding:6px 26px 30px;margin-top:10px;border:1px solid var(--line)}
+
+  .empty{text-align:center;padding:70px 20px;color:var(--ink-soft)}
+  .empty h3{font-family:var(--serif);font-size:1.6rem;color:var(--ink);margin-bottom:6px}
+
+  /* Footer */
+  footer{border-top:2px solid var(--ink);background:var(--bg-soft);padding:40px 0;margin-top:30px}
+  .foot{display:grid;grid-template-columns:2fr 1fr 1fr;gap:30px}
+  .foot h4{font-family:var(--serif);font-size:1.5rem;margin-bottom:8px}
+  .foot h4 .accent{color:var(--brand)}
+  .foot p,.foot a{font-size:.85rem;color:var(--ink-soft);display:block;margin-bottom:6px}
+  .foot a:hover{color:var(--brand)}
+  .foot strong{color:var(--ink);font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:12px}
+  .foot-note{text-align:center;font-size:.74rem;color:var(--ink-soft);margin-top:30px;border-top:1px solid var(--line);padding-top:18px}
+
+  /* ---------- Article modal ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(10,8,5,.6);backdrop-filter:blur(4px);z-index:200;
+    display:none;align-items:flex-start;justify-content:center;padding:40px 18px;overflow-y:auto}
+  .overlay.open{display:flex}
+  .article{background:var(--bg);max-width:760px;width:100%;border-radius:14px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.4);animation:rise .3s ease}
+  @keyframes rise{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+  .article__hero{position:relative;aspect-ratio:16/9}
+  .article__hero img{width:100%;height:100%;object-fit:cover}
+  .article__close{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;border:none;
+    background:rgba(0,0,0,.55);color:#fff;font-size:1.2rem;cursor:pointer;display:grid;place-items:center}
+  .article__close:hover{background:#000}
+  .article__inner{padding:28px 32px 36px}
+  .article__inner h2{font-family:var(--serif);font-weight:800;font-size:2rem;line-height:1.1;margin:10px 0 12px}
+  .article__inner .body-txt{font-size:1.04rem;color:var(--ink);line-height:1.75}
+  .article__inner .body-txt p{margin-bottom:16px}
+  .article__inner .src-link{display:inline-block;margin-top:8px;color:var(--brand);font-weight:600;font-size:.9rem}
+
+  @media(max-width:900px){
+    .hero{grid-template-columns:1fr}
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .searchbar{display:none}
+  }
+  @media(max-width:580px){
+    .grid{grid-template-columns:1fr}
+    .lead{min-height:340px}
+  }
+</style>
+</head>
+<body>
+
+<!-- BREAKING TICKER -->
+<div class="ticker">
+  <div class="ticker__label"><span class="dot"></span><span data-i18n="breaking">DERNIÈRE MINUTE</span></div>
+  <div class="ticker__track" id="ticker"></div>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="wrap">
+    <span id="dateline"></span>
+    <div class="topbar__right">
+      <div class="lang-toggle" id="langToggle">
+        <button data-lang="fr" class="active">FR</button>
+        <button data-lang="en">EN</button>
+      </div>
+      <button class="pill-btn" id="themeBtn"><span id="themeIcon">🌙</span><span data-i18n="theme">Sombre</span></button>
+      <button class="pill-btn" id="refreshBtn">⟳ <span data-i18n="refresh">Actualiser</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MASTHEAD -->
+<header class="masthead wrap">
+  <h1>Le <span class="accent">Vieillard</span></h1>
+  <div class="tag" data-i18n="slogan">L'AFRIQUE AU QUOTIDIEN</div>
+</header>
+
+<!-- CATEGORY NAV -->
+<nav class="cats">
+  <div class="wrap" id="catNav"></div>
+</nav>
+
+<main class="wrap" id="main"></main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap foot">
+    <div>
+      <h4>Le <span class="accent">Vieillard</span></h4>
+      <p data-i18n="footAbout">Une agrégation indépendante de l'actualité africaine, avec une couverture approfondie du Mali et du Sahel. Politique, économie, culture et sport — chaque jour.</p>
+    </div>
+    <div>
+      <strong data-i18n="footSections">Rubriques</strong>
+      <a data-i18n="cat_mali">Mali</a>
+      <a data-i18n="cat_politics">Politique</a>
+      <a data-i18n="cat_economy">Économie</a>
+      <a data-i18n="cat_sport">Sport</a>
+    </div>
+    <div>
+      <strong data-i18n="footSources">Sources</strong>
+      <a>RFI · France 24 · BBC Africa</a><a>Jeune Afrique · Al Jazeera</a><a>AllAfrica · Le Soft Post</a><a>Maliweb · Studio Tamani</a>
+    </div>
+  </div>
+  <div class="wrap foot-note">
+    <span data-i18n="footNote">© 2026 Sahel Tribune — Démonstration avec contenu illustratif. Connectez les flux RSS pour l'actualité en direct.</span>
+  </div>
+</footer>
+
+<!-- ARTICLE MODAL -->
+<div class="overlay" id="overlay">
+  <article class="article" id="articleBox"></article>
+</div>
+
+<script>
+/* =====================================================================
+   SAHEL TRIBUNE  — bilingual modern editorial news app
+   ---------------------------------------------------------------------
+   ARCHITECTURE NOTE — going live with real RSS:
+   Everything renders from getArticles(). Right now it returns MOCK_DATA.
+   To go live, replace the body of getArticles() with a fetch to your
+   backend / proxy that returns the same article shape:
+     { id, cat, img, source, url, time, fr:{title,excerpt,body[]},
+       en:{title,excerpt,body[]}, breaking?:true, lead?:true }
+   Suggested feeds (parse server-side to avoid CORS):
+     Mali   : https://www.rfi.fr/fr/afrique/mali/rss
+              https://studiotamani.org/feed
+              https://www.maliweb.net/feed
+     Africa : https://www.aljazeera.com/xml/rss/all.xml
+              https://www.jeuneafrique.com/feed/
+              https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf
+   ===================================================================== */
+
+/* ---------- i18n strings ---------- */
+const I18N = {
+  fr:{breaking:"DERNIÈRE MINUTE",theme:"Sombre",refresh:"Actualiser",
+      slogan:"L'AFRIQUE AU QUOTIDIEN",
+      cat_all:"À la une",cat_mali:"Mali",cat_sahel:"Sahel",cat_politics:"Politique",
+      cat_economy:"Économie",cat_culture:"Culture",cat_sport:"Sport",cat_tech:"Tech",cat_world:"Afrique & Monde",
+      maliTitle:"L'actualité du Mali",moreFrom:"Plus d'articles",
+      footAbout:"Une agrégation indépendante de l'actualité africaine, avec une couverture approfondie du Mali et du Sahel. Politique, économie, culture et sport — chaque jour.",
+      footSections:"Rubriques",footSources:"Sources",
+      footNote:"© 2026 Le Vieillard — Actualité agrégée en direct depuis des flux RSS publics. Les images peuvent être illustratives.",
+      search:"Rechercher…",readSource:"Lire à la source ↗",emptyT:"Aucun article",emptyB:"Aucun résultat pour cette recherche.",
+      live:"DIRECT",updated:"Mis à jour"},
+  en:{breaking:"BREAKING NEWS",theme:"Dark",refresh:"Refresh",
+      slogan:"AFRICA DAILY",
+      cat_all:"Top stories",cat_mali:"Mali",cat_sahel:"Sahel",cat_politics:"Politics",
+      cat_economy:"Economy",cat_culture:"Culture",cat_sport:"Sports",cat_tech:"Tech",cat_world:"Africa & World",
+      maliTitle:"Mali in focus",moreFrom:"More stories",
+      footAbout:"An independent aggregation of African news, with in-depth coverage of Mali and the Sahel. Politics, economy, culture and sport — every day.",
+      footSections:"Sections",footSources:"Sources",
+      footNote:"© 2026 Le Vieillard — Live news aggregated from public RSS feeds. Images may be illustrative.",
+      search:"Search…",readSource:"Read at source ↗",emptyT:"No articles",emptyB:"No results for this search.",
+      live:"LIVE",updated:"Updated"}
+};
+
+const CATS = ["all","mali","sahel","politics","economy","culture","sport","tech","world"];
+
+/* ---------- MOCK DATA (swap with live RSS, see note above) ---------- */
+function img(id,w=900,h=600){return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=70`;}
+const MOCK_DATA = [
+  {id:1,cat:"mali",lead:true,breaking:true,source:"Studio Tamani",url:"#",time:32,
+   img:img("1589519160732-57fc498494f8"),
+   fr:{title:"Bamako : nouvel accord sur l'approvisionnement en électricité pour soulager les ménages",
+       excerpt:"Le gouvernement annonce un protocole avec des producteurs régionaux pour réduire les délestages avant la saison des pluies.",
+       body:["Le gouvernement malien a annoncé mercredi un nouvel accord visant à stabiliser l'approvisionnement en électricité dans la capitale et plusieurs villes secondaires, alors que les coupures répétées pèsent sur les ménages et les petites entreprises.","L'accord prévoit l'achat d'électricité auprès de producteurs régionaux ainsi que le déploiement accéléré de capacités solaires. Les autorités espèrent réduire les délestages de manière significative avant le pic de consommation.","« C'est une étape importante, mais la mise en œuvre sera décisive », a réagi un économiste de Bamako interrogé sur place. Les associations de consommateurs réclament un calendrier précis."]},
+   en:{title:"Bamako: new electricity supply deal aims to ease pressure on households",
+       excerpt:"The government announces a protocol with regional producers to cut power cuts ahead of the rainy season.",
+       body:["Mali's government announced on Wednesday a new agreement to stabilise electricity supply in the capital and several secondary cities, as repeated outages weigh on households and small businesses.","The deal involves buying power from regional producers and an accelerated rollout of solar capacity. Authorities hope to significantly reduce load-shedding before peak demand.","\"This is an important step, but implementation will be decisive,\" said a Bamako-based economist. Consumer groups are calling for a clear timeline."]}},
+
+  {id:2,cat:"mali",breaking:true,source:"RFI Afrique",url:"#",time:58,
+   img:img("1523805009345-7448845a9e53"),
+   fr:{title:"Récolte de coton : le Mali vise une production record cette campagne",
+       excerpt:"La filière mise sur de meilleures pluies et un appui aux intrants pour relancer les revenus ruraux.",
+       body:["La Compagnie malienne de développement du textile table sur une campagne en forte hausse, portée par des conditions climatiques plus favorables et un meilleur accès aux intrants pour les producteurs.","Le coton reste un pilier de l'économie rurale et une source majeure de devises. Une bonne campagne pourrait soutenir des centaines de milliers de familles dans le sud du pays."]},
+   en:{title:"Cotton harvest: Mali targets record output this season",
+       excerpt:"The sector banks on better rains and input support to lift rural incomes.",
+       body:["Mali's cotton development company expects a sharply higher campaign, driven by more favourable weather and improved access to inputs for farmers.","Cotton remains a pillar of the rural economy and a major source of foreign currency. A strong campaign could support hundreds of thousands of families in the south."]}},
+
+  {id:3,cat:"mali",source:"Maliweb",url:"#",time:120,
+   img:img("1540575467063-178a50c2df87"),
+   fr:{title:"Éducation : réouverture progressive des écoles dans le centre du pays",
+       excerpt:"Plusieurs établissements rouvrent grâce à des programmes de soutien communautaire.",
+       body:["Des dizaines d'écoles fermées depuis plusieurs années rouvrent progressivement dans le centre du Mali, grâce à des initiatives communautaires et au soutien d'organisations humanitaires.","Le retour des enseignants reste un défi, mais les familles saluent une lueur d'espoir pour la nouvelle génération."]},
+   en:{title:"Education: gradual reopening of schools in central Mali",
+       excerpt:"Several schools reopen thanks to community support programmes.",
+       body:["Dozens of schools closed for years are gradually reopening in central Mali, thanks to community initiatives and support from humanitarian organisations.","The return of teachers remains a challenge, but families welcome a glimmer of hope for the new generation."]}},
+
+  {id:4,cat:"mali",source:"Jeune Afrique",url:"#",time:200,
+   img:img("1517457373958-b7bdd4587205"),
+   fr:{title:"Bamako accueille un forum régional sur la sécurité alimentaire",
+       excerpt:"Ministres et experts du Sahel se réunissent pour coordonner la réponse aux crises.",
+       body:["La capitale malienne accueille cette semaine un forum réunissant ministres et experts de la région sur la sécurité alimentaire et la résilience agricole.","Les discussions portent sur le stockage, les corridors commerciaux et le financement des petits producteurs face aux chocs climatiques."]},
+   en:{title:"Bamako hosts regional forum on food security",
+       excerpt:"Sahel ministers and experts gather to coordinate crisis response.",
+       body:["Mali's capital is hosting a forum this week bringing together regional ministers and experts on food security and agricultural resilience.","Talks focus on storage, trade corridors and financing for smallholder farmers facing climate shocks."]}},
+
+  {id:5,cat:"sahel",breaking:true,source:"Al Jazeera",url:"#",time:75,
+   img:img("1473773508845-188df298d2d1"),
+   fr:{title:"Sahel : les pays de l'AES dévoilent un projet de passeport commun",
+       excerpt:"Une initiative destinée à faciliter la libre circulation entre États membres.",
+       body:["Les États du Sahel ont présenté un projet de passeport commun visant à faciliter la circulation des personnes et des marchandises entre pays membres.","Les analystes y voient une volonté d'approfondir l'intégration régionale, tout en soulignant les défis logistiques et diplomatiques."]},
+   en:{title:"Sahel: AES states unveil plan for a common passport",
+       excerpt:"An initiative meant to ease free movement between member states.",
+       body:["Sahel states have presented a plan for a common passport to facilitate the movement of people and goods between member countries.","Analysts see it as a push to deepen regional integration, while noting logistical and diplomatic challenges."]}},
+
+  {id:6,cat:"economy",source:"Reuters Africa",url:"#",time:90,
+   img:img("1611974789855-9c2a0a7236a3"),
+   fr:{title:"Franc CFA : le débat sur la monnaie régionale relancé",
+       excerpt:"Économistes et responsables ouest-africains discutent des prochaines étapes.",
+       body:["Le débat sur l'avenir du franc CFA et le projet de monnaie unique ouest-africaine refait surface lors d'une rencontre de banquiers centraux.","Plusieurs économistes plaident pour une transition prudente afin de préserver la stabilité des prix et la confiance des marchés."]},
+   en:{title:"CFA franc: debate over the regional currency reignites",
+       excerpt:"West African economists and officials weigh the next steps.",
+       body:["The debate over the future of the CFA franc and the planned West African single currency resurfaced at a meeting of central bankers.","Several economists argue for a cautious transition to preserve price stability and market confidence."]}},
+
+  {id:7,cat:"politics",source:"AllAfrica",url:"#",time:140,
+   img:img("1529107386315-e1a2ed48a620"),
+   fr:{title:"Union africaine : sommet sur la dette et le financement climatique",
+       excerpt:"Les dirigeants appellent à réformer l'architecture financière mondiale.",
+       body:["Les chefs d'État réunis sous l'égide de l'Union africaine ont appelé à une réforme de l'architecture financière mondiale pour alléger le fardeau de la dette.","Le financement de l'adaptation climatique figure au cœur des discussions, alors que le continent subit des chocs croissants."]},
+   en:{title:"African Union: summit on debt and climate finance",
+       excerpt:"Leaders call for reform of the global financial architecture.",
+       body:["Heads of state meeting under the African Union called for reform of the global financial architecture to ease the debt burden.","Climate adaptation finance is central to the talks, as the continent faces growing shocks."]}},
+
+  {id:8,cat:"sport",source:"BBC Sport Africa",url:"#",time:45,
+   img:img("1431324155629-1a6deb1dec8d"),
+   fr:{title:"CAN : les Aigles du Mali décrochent une qualification décisive",
+       excerpt:"Une victoire à l'extérieur rapproche l'équipe nationale de la phase finale.",
+       body:["L'équipe nationale du Mali, les Aigles, a signé une victoire importante à l'extérieur qui la rapproche de la qualification pour la prochaine Coupe d'Afrique des Nations.","Les supporters ont célébré dans les rues de Bamako, portés par l'espoir d'un parcours prometteur."]},
+   en:{title:"AFCON: Mali's Eagles secure a decisive qualification result",
+       excerpt:"An away win moves the national team closer to the finals.",
+       body:["Mali's national team, the Eagles, claimed an important away win that brings them closer to qualifying for the next Africa Cup of Nations.","Fans celebrated in the streets of Bamako, buoyed by hope of a promising run."]}},
+
+  {id:9,cat:"culture",source:"RFI Culture",url:"#",time:260,
+   img:img("1516450360452-9312f5e86fc7"),
+   fr:{title:"Musique : le festival sur le Niger fait son grand retour à Ségou",
+       excerpt:"Artistes du Sahel et d'ailleurs célèbrent la richesse culturelle malienne.",
+       body:["Le célèbre festival au bord du fleuve Niger fait son retour à Ségou, réunissant des artistes du Mali, du Sahel et au-delà.","L'événement met en lumière la vitalité de la scène musicale malienne, des griots traditionnels aux jeunes talents urbains."]},
+   en:{title:"Music: the Festival on the Niger returns to Ségou",
+       excerpt:"Artists from the Sahel and beyond celebrate Malian culture.",
+       body:["The famous festival on the banks of the Niger River returns to Ségou, gathering artists from Mali, the Sahel and beyond.","The event highlights the vitality of Mali's music scene, from traditional griots to young urban talents."]}},
+
+  {id:10,cat:"tech",source:"TechCabal",url:"#",time:175,
+   img:img("1551288049-bebda4e38f71"),
+   fr:{title:"Fintech : l'argent mobile dépasse de nouveaux records en Afrique de l'Ouest",
+       excerpt:"Les paiements numériques transforment le commerce informel et l'inclusion financière.",
+       body:["Le volume des transactions par argent mobile a atteint de nouveaux sommets en Afrique de l'Ouest, portant l'inclusion financière dans les zones rurales.","Au Mali, l'essor des paiements numériques soutient les petits commerçants et facilite les transferts entre les villes et les campagnes."]},
+   en:{title:"Fintech: mobile money hits new records in West Africa",
+       excerpt:"Digital payments reshape informal trade and financial inclusion.",
+       body:["Mobile money transaction volumes hit new highs in West Africa, boosting financial inclusion in rural areas.","In Mali, the rise of digital payments supports small traders and eases transfers between cities and the countryside."]}},
+
+  {id:11,cat:"world",source:"Al Jazeera",url:"#",time:300,
+   img:img("1502920917128-1aa500764cbd"),
+   fr:{title:"Climat : l'Afrique de l'Ouest se prépare à une saison des pluies imprévisible",
+       excerpt:"Les services météo appellent à renforcer la prévention des inondations.",
+       body:["Les agences météorologiques de la région avertissent d'une saison des pluies potentiellement imprévisible, avec des risques d'inondations dans plusieurs bassins.","Les autorités appellent à renforcer les systèmes d'alerte précoce et la préparation des communautés vulnérables."]},
+   en:{title:"Climate: West Africa braces for an unpredictable rainy season",
+       excerpt:"Weather services urge stronger flood prevention.",
+       body:["Regional weather agencies warn of a potentially unpredictable rainy season, with flood risks across several basins.","Authorities are calling for stronger early-warning systems and preparedness for vulnerable communities."]}},
+
+  {id:12,cat:"economy",source:"Jeune Afrique",url:"#",time:330,
+   img:img("1605792657660-596af9009e82"),
+   fr:{title:"Or : le secteur minier malien attire de nouveaux investissements",
+       excerpt:"De nouveaux projets pourraient renforcer les recettes de l'État.",
+       body:["Le secteur aurifère malien, l'un des plus importants du continent, suscite un regain d'intérêt des investisseurs après une révision du cadre réglementaire.","Le gouvernement espère accroître la part des recettes minières dans le budget national."]},
+   en:{title:"Gold: Mali's mining sector attracts fresh investment",
+       excerpt:"New projects could strengthen state revenues.",
+       body:["Mali's gold sector, one of the largest on the continent, is drawing renewed investor interest after a regulatory overhaul.","The government hopes to increase the share of mining revenues in the national budget."]}},
+
+  {id:13,cat:"sahel",source:"Studio Tamani",url:"#",time:410,
+   img:img("1469474968028-56623f02e42e"),
+   fr:{title:"Agriculture : un corridor commercial relie les marchés du Sahel",
+       excerpt:"Un projet régional vise à fluidifier le transport des denrées.",
+       body:["Un nouveau corridor commercial doit faciliter l'acheminement des denrées alimentaires entre les marchés du Sahel et réduire les pertes post-récolte.","Les commerçants espèrent une baisse des coûts de transport et une meilleure stabilité des prix."]},
+   en:{title:"Agriculture: a trade corridor links Sahel markets",
+       excerpt:"A regional project aims to smooth the transport of goods.",
+       body:["A new trade corridor is set to ease the movement of food between Sahel markets and cut post-harvest losses.","Traders hope for lower transport costs and more stable prices."]}},
+
+  {id:14,cat:"culture",source:"Le Monde Afrique",url:"#",time:480,
+   img:img("1504609773096-104ff2c73ba4"),
+   fr:{title:"Patrimoine : Tombouctou poursuit la restauration de ses manuscrits",
+       excerpt:"Des milliers de documents historiques sont numérisés et protégés.",
+       body:["Le travail de restauration et de numérisation des manuscrits anciens de Tombouctou se poursuit, préservant un patrimoine intellectuel inestimable.","Ces documents témoignent du rôle historique de la ville comme centre de savoir en Afrique de l'Ouest."]},
+   en:{title:"Heritage: Timbuktu continues restoring its manuscripts",
+       excerpt:"Thousands of historical documents are digitised and protected.",
+       body:["The restoration and digitisation of Timbuktu's ancient manuscripts continues, preserving an invaluable intellectual heritage.","These documents attest to the city's historic role as a centre of learning in West Africa."]}},
+
+  {id:15,cat:"politics",source:"RFI Afrique",url:"#",time:520,
+   img:img("1541872703-74c5e44368f9"),
+   fr:{title:"Diplomatie : Bamako renforce ses partenariats commerciaux régionaux",
+       excerpt:"De nouveaux accords visent à diversifier les échanges du pays.",
+       body:["Le Mali multiplie les accords commerciaux avec ses voisins et des partenaires émergents afin de diversifier ses débouchés économiques.","Les autorités mettent en avant une stratégie d'ouverture maîtrisée centrée sur les intérêts nationaux."]},
+   en:{title:"Diplomacy: Bamako strengthens regional trade partnerships",
+       excerpt:"New deals aim to diversify the country's trade.",
+       body:["Mali is signing more trade agreements with neighbours and emerging partners to diversify its economic outlets.","Authorities emphasise a measured opening centred on national interests."]}},
+
+  {id:16,cat:"tech",source:"TechCabal",url:"#",time:600,
+   img:img("1498050108023-c5249f4df085"),
+   fr:{title:"Numérique : des start-up maliennes primées dans un concours panafricain",
+       excerpt:"De jeunes entrepreneurs innovent dans l'agritech et la santé.",
+       body:["Plusieurs start-up maliennes ont été récompensées lors d'un concours panafricain saluant l'innovation dans l'agritech, la santé et l'éducation.","Les lauréats espèrent lever des fonds pour passer à l'échelle et créer des emplois locaux."]},
+   en:{title:"Tech: Malian startups win at a pan-African competition",
+       excerpt:"Young entrepreneurs innovate in agritech and health.",
+       body:["Several Malian startups were recognised at a pan-African competition celebrating innovation in agritech, health and education.","Winners hope to raise funds to scale up and create local jobs."]}}
+];
+
+/* =====================================================================
+   LIVE RSS  — fetched in-browser through public CORS proxies.
+   No server needed. Feeds are mostly French (Mali/Africa); BBC is EN.
+   Article content is shown in its source language in both FR/EN modes;
+   the FR/EN toggle still switches all interface labels.
+   ===================================================================== */
+/* lang = source language of the feed (used by the auto-translator) */
+const FEEDS = [
+  // Pan-African / international
+  {source:"RFI Afrique",       cat:"world", lang:"fr", url:"https://www.rfi.fr/fr/afrique/rss"},
+  {source:"France 24 Afrique", cat:"world", lang:"fr", url:"https://www.france24.com/fr/afrique/rss"},
+  {source:"Jeune Afrique",     cat:"world", lang:"fr", url:"https://www.jeuneafrique.com/feed/"},
+  {source:"Le Soft Post",      cat:"world", lang:"fr", url:"https://lesoftpost.com/feed/"},
+  {source:"BBC Africa",        cat:"world", lang:"en", url:"https://feeds.bbci.co.uk/news/world/africa/rss.xml"},
+  {source:"AllAfrica",         cat:"world", lang:"en", url:"https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf"},
+  {source:"Al Jazeera",        cat:"world", lang:"en", url:"https://www.aljazeera.com/xml/rss/all.xml"},
+  // Mali-focused
+  {source:"Maliweb",           cat:"mali",  lang:"fr", url:"https://www.maliweb.net/feed"},
+  {source:"Studio Tamani",     cat:"mali",  lang:"fr", url:"https://studiotamani.org/feed"},
+  {source:"Bamada.net",        cat:"mali",  lang:"fr", url:"https://bamada.net/feed"},
+  {source:"Maliactu",          cat:"mali",  lang:"fr", url:"https://maliactu.net/feed/"},
+  {source:"Journal du Mali",   cat:"mali",  lang:"fr", url:"https://www.journaldumali.com/feed/"},
+  {source:"Malijet",           cat:"mali",  lang:"fr", url:"https://malijet.com/feed"},
+  {source:"aBamako",           cat:"mali",  lang:"fr", url:"https://news.abamako.com/rss/rss.xml"}
+];
+
+const FALLBACK = {
+  mali:img("1589519160732-57fc498494f8"), sahel:img("1469474968028-56623f02e42e"),
+  economy:img("1605792657660-596af9009e82"), politics:img("1529107386315-e1a2ed48a620"),
+  culture:img("1516450360452-9312f5e86fc7"), sport:img("1431324155629-1a6deb1dec8d"),
+  tech:img("1498050108023-c5249f4df085"), world:img("1502920917128-1aa500764cbd")
+};
+/* expose to inline onerror handlers (which run in global scope) so broken
+   / hotlink-protected feed images swap to a category placeholder */
+window.NEWS_FALLBACK=FALLBACK;
+window.imgFallback=function(el,cat){el.onerror=null;el.src=window.NEWS_FALLBACK[cat]||window.NEWS_FALLBACK.world;};
+
+/* generic GET through a chain of free CORS proxies; returns raw text */
+async function proxyGet(url,timeout=9000){
+  const proxies = [
+    {build:u=>`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`, json:true},
+    {build:u=>`https://corsproxy.io/?url=${encodeURIComponent(u)}`,          json:false},
+    {build:u=>`https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(u)}`, json:false}
+  ];
+  for(const px of proxies){
+    try{
+      const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),timeout);
+      const res=await fetch(px.build(url),{signal:ctrl.signal}); clearTimeout(to);
+      if(!res.ok) continue;
+      const txt = px.json ? (await res.json()).contents : await res.text();
+      if(txt) return txt;
+    }catch(e){/* try next proxy */}
+  }
+  return null;
+}
+async function fetchFeed(url){
+  const txt=await proxyGet(url);
+  return (txt && txt.indexOf("<")!==-1) ? txt : null;
+}
+
+/* ---------- live auto-translation (free Google endpoint, no key) ---------- */
+const TR_CACHE=new Map();
+async function translate(text,target){    // returns translated text, or null on failure (so callers can retry)
+  if(!text) return text;
+  const key=target+"::"+text;
+  if(TR_CACHE.has(key)) return TR_CACHE.get(key);
+  try{
+    const url=`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
+    const raw=await proxyGet(url,8000);
+    if(raw){
+      const data=JSON.parse(raw);
+      const out=(data[0]||[]).map(s=>s[0]).join("");
+      if(out){TR_CACHE.set(key,out);return out;}
+    }
+  }catch(e){/* transient — don't cache, allow retry */}
+  return null;
+}
+/* translate title + excerpt in a single request so they always match */
+async function translatePair(title,excerpt,target){
+  const sep="\n@@@@\n";
+  const out=await translate(title+sep+excerpt,target);
+  if(out && out.indexOf("@@@@")!==-1){
+    const parts=out.split(/\s*@@@@\s*/);
+    return {title:parts[0].trim(), excerpt:parts.slice(1).join(" ").trim()};
+  }
+  return null;
+}
+/* translate every article's title+excerpt into the active language,
+   throttled to a few concurrent requests; re-renders when done */
+let _translating=false, _rerenderTimer=null;
+function scheduleRerender(){            // debounced refresh while translations stream in
+  if(_rerenderTimer) return;
+  _rerenderTimer=setTimeout(()=>{_rerenderTimer=null; render();},900);
+}
+async function ensureTranslations(){
+  if(_translating) return;
+  const target=LANG;
+  // skip articles already translated or that failed too many times this session
+  const need=ARTICLES.filter(a=>a.srcLang && a.srcLang!==target && !(a.tr&&a.tr[target]) && (a._trFails||0)<3);
+  if(!need.length) return;
+  _translating=true;
+  const queue=[...need];
+  const worker=async()=>{
+    while(queue.length){
+      const a=queue.shift(); const o=a.fr;
+      const pair=await translatePair(o.title,o.excerpt,target);
+      if(pair){ a.tr=a.tr||{}; a.tr[target]={title:pair.title,excerpt:pair.excerpt,body:o.body};
+                if(LANG===target) scheduleRerender(); }   // show each batch as it lands
+      else { a._trFails=(a._trFails||0)+1; }              // transient failure — retry on a later pass
+    }
+  };
+  await Promise.all([worker(),worker(),worker(),worker()]);
+  _translating=false;
+  if(LANG===target) render();
+}
+/* pick the content object to display (translated if available) */
+function disp(a){
+  if(!a.srcLang || a.srcLang===LANG) return a[LANG]||a.fr;
+  return (a.tr&&a.tr[LANG]) || a.fr;
+}
+function isTranslated(a){return a.srcLang && a.srcLang!==LANG && a.tr && a.tr[LANG];}
+
+function stripHTML(h){
+  if(!h) return "";
+  const d=new DOMParser().parseFromString(h,"text/html");
+  return (d.body.textContent||"").replace(/\s+/g," ").trim();
+}
+function truncate(s,n){return s.length>n?s.slice(0,n-1).trim()+"…":s;}
+
+function extractImage(it,desc){
+  const enc=it.querySelector("enclosure[url]");
+  if(enc){const u=enc.getAttribute("url")||"";const ty=enc.getAttribute("type")||"";
+    if(/image/i.test(ty)||/\.(jpe?g|png|webp|gif)/i.test(u)) return u;}
+  const mc=it.getElementsByTagName("media:content")[0];
+  if(mc && mc.getAttribute("url")) return mc.getAttribute("url");
+  const mt=it.getElementsByTagName("media:thumbnail")[0];
+  if(mt && mt.getAttribute("url")) return mt.getAttribute("url");
+  const m=desc && desc.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return m?m[1]:"";
+}
+
+/* keyword routing so the category tabs stay populated */
+function categorize(text,feed){
+  const s=text.toLowerCase();
+  if(feed.cat==="mali" || /\bmali\b|bamako|malien|malienne|kayes|sikasso|s[ée]gou|mopti|tombouctou|\bgao\b|kidal/.test(s)) return "mali";
+  if(/football|\bfoot\b|\bcan\b|coupe d'afrique|\bmatch\b|sport|joueur|aigles|basket|athl[ée]|olympique/.test(s)) return "sport";
+  if(/[ée]conomie|franc cfa|\bcfa\b|banque|march[ée]|bourse|\bor\b|coton|prix|inflation|investiss|\bfmi\b|croissance|budget|dette|commerce/.test(s)) return "economy";
+  if(/num[ée]rique|\btech\b|startup|mobile money|internet|\bia\b|intelligence artificielle|application|fintech|digital/.test(s)) return "tech";
+  if(/musique|festival|\bfilm\b|cin[ée]ma|culture|patrimoine|\blivre\b|artiste|\bdanse\b|mode\b/.test(s)) return "culture";
+  if(/sahel|\bniger\b|burkina|\baes\b|tchad|mauritanie/.test(s)) return "sahel";
+  if(/pr[ée]sident|ministre|gouvernement|[ée]lection|accord|diploma|sommet|parlement|\bcoup\b|junte|s[ée]curit[ée]/.test(s)) return "politics";
+  return feed.cat||"world";
+}
+
+function parseFeed(xml,feed){
+  const doc=new DOMParser().parseFromString(xml,"text/xml");
+  let items=[...doc.querySelectorAll("item")];
+  if(!items.length) items=[...doc.querySelectorAll("entry")]; // Atom
+  return items.slice(0,15).map(it=>{
+    const get=sel=>{const e=it.querySelector(sel);return e?e.textContent.trim():"";};
+    let title=get("title").replace(/\s+/g," ").trim(); if(!title) return null;
+    title=truncate(title,160);
+    let link=get("link");
+    if(!link){const l=it.querySelector("link[href]");link=l?l.getAttribute("href"):feed.url;}
+    let desc=get("description")||get("summary")||"";
+    const ce=it.getElementsByTagName("content:encoded")[0];
+    if(ce && ce.textContent.length>desc.length) desc=ce.textContent;
+    const clean=stripHTML(desc);
+    const dateStr=get("pubDate")||get("published")||get("updated")||"";
+    const d=dateStr?new Date(dateStr):null;
+    let mins=d&&!isNaN(d)?Math.round((Date.now()-d)/60000):600;
+    if(!isFinite(mins)||mins<0) mins=600;
+    const cat=categorize(title+" "+clean,feed);
+    const image=extractImage(it,desc)||FALLBACK[cat]||FALLBACK.world;
+    const paras=(clean||title).split(/(?<=[.!?])\s+(?=[A-ZÀ-Ý])/).slice(0,5);
+    const content={title,excerpt:truncate(clean||title,170),body:paras.length?paras:[clean||title]};
+    return {_t:title.toLowerCase().slice(0,80),cat,img:image,source:feed.source,url:link,time:mins,srcLang:feed.lang||"fr",fr:content,en:content};
+  }).filter(Boolean);
+}
+
+/* ---------- data access ---------- */
+async function getArticles(){
+  const lists=await Promise.all(FEEDS.map(async f=>{
+    const xml=await fetchFeed(f.url);
+    if(!xml) return [];
+    try{return parseFeed(xml,f);}catch(e){return [];}
+  }));
+  let all=lists.flat();
+  // dedupe by title
+  const seen=new Set();
+  all=all.filter(a=>{if(seen.has(a._t))return false;seen.add(a._t);return true;});
+  // newest first
+  all.sort((a,b)=>a.time-b.time);
+  if(!all.length) return MOCK_DATA;            // graceful fallback if all proxies/feeds fail
+  all=all.slice(0,60).map((a,i)=>({...a,id:i+1}));
+  // lead = freshest story that has a real (non-fallback) image, else freshest
+  const lead=all.find(a=>!Object.values(FALLBACK).includes(a.img))||all[0];
+  lead.lead=true;
+  all.slice(0,7).forEach(a=>a.breaking=true);  // populate the breaking ticker
+  return all;
+}
+
+/* ---------- state ---------- */
+let LANG = localStorage.getItem("st-lang") || "fr";
+let CAT  = "all";
+let QUERY = "";
+let ARTICLES = [];
+
+/* ---------- helpers ---------- */
+const t = k => I18N[LANG][k] || k;
+function timeAgo(min){
+  if(min<60) return LANG==="fr"?`il y a ${min} min`:`${min} min ago`;
+  const h=Math.floor(min/60);
+  if(h<24) return LANG==="fr"?`il y a ${h} h`:`${h} h ago`;
+  const d=Math.floor(h/24);
+  return LANG==="fr"?`il y a ${d} j`:`${d} d ago`;
+}
+function fmtDate(){
+  const opts={weekday:"long",year:"numeric",month:"long",day:"numeric"};
+  return new Date().toLocaleDateString(LANG==="fr"?"fr-FR":"en-GB",opts);
+}
+
+/* ---------- rendering ---------- */
+function trMark(a){return isTranslated(a)?`<span class="tr-mark" title="${LANG==="fr"?"Traduit automatiquement":"Auto-translated"}">🌐</span>`:"";}
+function articleCard(a){
+  const d=disp(a);
+  return `<article class="card" data-id="${a.id}">
+    <div class="thumb">
+      <img loading="lazy" src="${a.img}" alt="" onerror="imgFallback(this,'${a.cat}')">
+      <span class="cat-flag">${a.cat==="mali"?"🇲🇱 ":""}${t("cat_"+a.cat)}</span>
+    </div>
+    <div class="body">
+      <span class="kicker"><span class="cat-tag">${a.source}</span>${a.breaking?`<span class="badge-live">${t("live")}</span>`:""}</span>
+      <h3>${d.title}</h3>
+      <p>${d.excerpt}</p>
+      <div class="meta"><span class="src">${a.source}</span><span>·</span><span>${timeAgo(a.time)}</span>${trMark(a)}</div>
+    </div>
+  </article>`;
+}
+
+function render(){
+  const main=document.getElementById("main");
+  const list=ARTICLES.filter(a=>{
+    const okCat = CAT==="all"||a.cat===CAT;
+    const d=a[LANG];
+    const okQ = !QUERY || (d.title+d.excerpt+a.source).toLowerCase().includes(QUERY.toLowerCase());
+    return okCat && okQ;
+  });
+
+  if(!list.length){
+    main.innerHTML=`<div class="empty"><h3>${t("emptyT")}</h3><p>${t("emptyB")}</p></div>`;
+    return;
+  }
+
+  let html="";
+
+  // Top-stories layout (hero + mali band) only on "all" with no query
+  if(CAT==="all" && !QUERY){
+    const lead = list.find(a=>a.lead) || list[0];
+    const sideStories = list.filter(a=>a!==lead).slice(0,3);
+    const ld=disp(lead);
+    html+=`<section class="hero">
+      <div class="lead" data-id="${lead.id}">
+        <img src="${lead.img}" alt="" onerror="imgFallback(this,'${lead.cat}')">
+        <div class="lead__body">
+          <span class="kicker">${lead.breaking?`<span class="badge-live">${t("live")}</span>`:""}<span class="cat-tag">${lead.cat==="mali"?"🇲🇱 ":""}${t("cat_"+lead.cat)}</span></span>
+          <h3>${ld.title}</h3>
+          <p>${ld.excerpt}</p>
+          <div class="meta" style="color:#d9d4cc"><span class="src" style="color:#fff">${lead.source}</span><span>·</span><span>${timeAgo(lead.time)}</span></div>
+        </div>
+      </div>
+      <div class="hero__side">
+        ${sideStories.map(a=>{const d=disp(a);return `<div class="side-card" data-id="${a.id}">
+          <div><span class="kicker"><span class="cat-tag">${t("cat_"+a.cat)}</span></span><h4>${d.title}</h4>
+          <div class="meta"><span class="src">${a.source}</span><span>·</span><span>${timeAgo(a.time)}</span>${trMark(a)}</div></div>
+          <img loading="lazy" src="${a.img}" alt="" onerror="imgFallback(this,'${a.cat}')"></div>`;}).join("")}
+      </div>
+    </section>`;
+
+    // Mali focus band
+    const maliList = ARTICLES.filter(a=>a.cat==="mali");
+    if(maliList.length){
+      html+=`<div class="section-head">
+        <span class="mali-flag"><i></i><i></i><i></i></span>
+        <h2>${t("maliTitle")}</h2><div class="bar"></div>
+        <span class="count">${maliList.length} ${LANG==="fr"?"articles":"stories"}</span></div>
+        <div class="mali-band"><div class="grid" style="margin-top:22px">${maliList.slice(0,3).map(articleCard).join("")}</div></div>`;
+    }
+
+    // Rest
+    const rest=list.filter(a=>a!==lead && !sideStories.includes(a));
+    if(rest.length){
+      html+=`<div class="section-head"><h2>${t("moreFrom")}</h2><div class="bar"></div></div>
+        <div class="grid">${rest.map(articleCard).join("")}</div>`;
+    }
+  } else {
+    const title = CAT==="all" ? t("moreFrom") : t("cat_"+CAT);
+    html+=`<div class="section-head">${CAT==="mali"?'<span class="mali-flag"><i></i><i></i><i></i></span>':""}
+      <h2>${title}</h2><div class="bar"></div><span class="count">${list.length} ${LANG==="fr"?"articles":"stories"}</span></div>
+      <div class="grid">${list.map(articleCard).join("")}</div>`;
+  }
+
+  main.innerHTML=html;
+  main.querySelectorAll("[data-id]").forEach(el=>el.addEventListener("click",()=>openArticle(+el.dataset.id)));
+  renderTicker();         // keep the breaking ticker in sync with translations
+  ensureTranslations();   // fill in translations for the active language (non-blocking)
+}
+
+function renderTicker(){
+  const items=ARTICLES.filter(a=>a.breaking).map(a=>disp(a).title);
+  const seq=[...items,...items]; // duplicate for seamless loop
+  document.getElementById("ticker").innerHTML=seq.map(x=>`<span>${x}</span>`).join("");
+}
+
+function renderNav(){
+  document.getElementById("catNav").innerHTML =
+    CATS.map(c=>`<button class="cat ${c==="mali"?"mali":""} ${c===CAT?"active":""}" data-cat="${c}">${t("cat_"+c)}</button>`).join("")
+    + `<div class="searchbar"><input id="search" type="search" placeholder="${t("search")}" value="${QUERY}"></div>`;
+  document.querySelectorAll(".cat").forEach(b=>b.addEventListener("click",()=>{CAT=b.dataset.cat;renderNav();render();window.scrollTo({top:0,behavior:"smooth"});}));
+  const s=document.getElementById("search");
+  s.addEventListener("input",e=>{QUERY=e.target.value;render();});
+}
+
+function applyI18nStatic(){
+  document.documentElement.lang=LANG;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{
+    const k=el.getAttribute("data-i18n"); if(I18N[LANG][k]) el.textContent=I18N[LANG][k];
+  });
+  document.getElementById("dateline").textContent=fmtDate().replace(/^./,c=>c.toUpperCase());
+}
+
+/* ---------- article modal ---------- */
+function openArticle(id){
+  const a=ARTICLES.find(x=>x.id===id); if(!a)return;
+  const d=disp(a);
+  const needTr=a.srcLang && a.srcLang!==LANG;
+  document.getElementById("articleBox").innerHTML=`
+    <div class="article__hero"><img src="${a.img}" alt="" onerror="imgFallback(this,'${a.cat}')">
+      <button class="article__close" id="closeArt">×</button></div>
+    <div class="article__inner">
+      <span class="kicker"><span class="cat-tag" style="color:var(--gold)">${a.cat==="mali"?"🇲🇱 ":""}${t("cat_"+a.cat)}</span>${a.breaking?`<span class="badge-live">${t("live")}</span>`:""}${needTr?`<span class="tr-mark" title="${LANG==="fr"?"Traduit automatiquement":"Auto-translated"}">🌐</span>`:""}</span>
+      <h2 id="artTitle">${d.title}</h2>
+      <div class="meta"><span class="src">${a.source}</span><span>·</span><span>${timeAgo(a.time)}</span></div>
+      <div class="body-txt" id="artBody" style="margin-top:18px">${(d.body||[]).map(p=>`<p>${p}</p>`).join("")}</div>
+      <a class="src-link" href="${a.url}" target="_blank" rel="noopener">${t("readSource")}</a>
+    </div>`;
+  document.getElementById("overlay").classList.add("open");
+  document.body.style.overflow="hidden";
+  document.getElementById("closeArt").addEventListener("click",closeArticle);
+  if(needTr) translateBody(a,id);
+}
+/* translate the full article body on demand, then patch the open modal */
+async function translateBody(a,id){
+  const target=LANG, o=a.fr;
+  const res=await Promise.all([translate(o.title,target),...(o.body||[]).map(p=>translate(p,target))]);
+  const title=res[0]||o.title;
+  const paras=res.slice(1).map((p,i)=>p||o.body[i]);   // keep original where a paragraph failed
+  a.tr=a.tr||{}; a.tr[target]=Object.assign({excerpt:o.excerpt},a.tr[target]||{},{title,body:paras});
+  if(LANG!==target) return;
+  const titleEl=document.getElementById("artTitle"), bodyEl=document.getElementById("artBody");
+  if(titleEl) titleEl.textContent=title;
+  if(bodyEl) bodyEl.innerHTML=paras.map(p=>`<p>${p}</p>`).join("");
+}
+function closeArticle(){
+  document.getElementById("overlay").classList.remove("open");
+  document.body.style.overflow="";
+}
+document.getElementById("overlay").addEventListener("click",e=>{if(e.target.id==="overlay")closeArticle();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeArticle();});
+
+/* ---------- controls ---------- */
+function setLang(l){
+  LANG=l;localStorage.setItem("st-lang",l);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("active",b.dataset.lang===l));
+  applyI18nStatic();renderNav();renderTicker();render();
+}
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.lang)));
+
+const themeBtn=document.getElementById("themeBtn");
+function setTheme(th){
+  document.documentElement.dataset.theme=th;localStorage.setItem("st-theme",th);
+  document.getElementById("themeIcon").textContent=th==="dark"?"☀️":"🌙";
+}
+themeBtn.addEventListener("click",()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark"));
+
+const refreshBtn=document.getElementById("refreshBtn");
+refreshBtn.addEventListener("click",async()=>{
+  refreshBtn.style.opacity=".5";
+  await load();
+  refreshBtn.style.opacity="1";
+});
+
+/* ---------- boot ---------- */
+async function load(){
+  if(!ARTICLES.length){
+    document.getElementById("main").innerHTML=
+      `<div class="empty"><h3>${LANG==="fr"?"Chargement de l'actualité…":"Loading the news…"}</h3>
+       <p>${LANG==="fr"?"Récupération des flux en direct (RFI, Jeune Afrique, Maliweb…)":"Fetching live feeds (RFI, Jeune Afrique, Maliweb…)"}</p></div>`;
+  }
+  const data=await getArticles();
+  if(data && data.length) ARTICLES=data;
+  renderTicker();render();
+}
+(async function init(){
+  setTheme(localStorage.getItem("st-theme")||"light");
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("active",b.dataset.lang===LANG));
+  applyI18nStatic();renderNav();
+  await load();
+  // simulate "live" refresh every 90s (no-op on mock; will re-fetch when wired to RSS)
+  setInterval(load,90000);
+})();
+</script>
+</body>
+</html>
