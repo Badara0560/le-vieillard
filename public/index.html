@@ -205,9 +205,26 @@
     .grid{grid-template-columns:repeat(2,1fr)}
     .searchbar{display:none}
   }
+  /* ---- phone layout ---- */
+  @media(max-width:680px){
+    .wrap{padding:0 16px}
+    /* topbar: let it wrap instead of overflowing; date on its own centered line */
+    .topbar .wrap{height:auto;flex-wrap:wrap;justify-content:center;gap:8px 10px;padding:8px 0}
+    #dateline{order:-1;width:100%;text-align:center;font-size:.72rem;line-height:1.2}
+    .topbar__right{gap:8px;flex-wrap:wrap;justify-content:center}
+    .pill-btn{padding:7px 12px}
+    /* icon-only theme + refresh to save room */
+    #themeBtn span[data-i18n],#refreshBtn span[data-i18n]{display:none}
+    .masthead{padding:18px 0 12px}
+    .section-head h2{font-size:1.3rem}
+    .article__inner{padding:22px 20px 30px}
+    .article__inner h2{font-size:1.55rem}
+  }
   @media(max-width:580px){
     .grid{grid-template-columns:1fr}
     .lead{min-height:340px}
+    .lead__body{padding:22px}
+    .lead__body h3{font-size:1.5rem}
   }
 </style>
 </head>
