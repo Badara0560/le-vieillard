@@ -110,6 +110,13 @@ const server = http.createServer(async (req, res) => {
   try {
     if (p === '/api/news') return sendJSON(res, 200, newsPayload());
 
+    // TEMPORARY one-time test trigger (guarded by a key); removed after verifying.
+    if (p === '/api/test-push') {
+      if (url.searchParams.get('key') !== 'lv-verify-7H3k9Qz') return sendJSON(res, 403, { error: 'forbidden' });
+      const r = await notify.sendTest(state.articles);
+      return sendJSON(res, 200, r);
+    }
+
     if (p === '/api/status') {
       return sendJSON(res, 200, { updated: state.updated, articles: state.articles.length,
         subscribers: store.counts(), pushConfigured: notify.isConfigured() });
