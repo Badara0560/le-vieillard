@@ -22,14 +22,32 @@ const path = require('path');
   } catch { /* no .env — fine */ }
 })();
 
-const feeds  = require('./lib/feeds');
-const store  = require('./lib/store');
-const notify = require('./lib/notify');
+const feeds      = require('./lib/feeds');
+const store      = require('./lib/store');
+const notify     = require('./lib/notify');
+const newsletter = require('./lib/newsletter');
 
 const PORT        = +(process.env.PORT || 8132);
 const REFRESH_MIN = +(process.env.REFRESH_MIN || 8);    // website feed refresh
-const PUSH_HOURS  = +(process.env.PUSH_HOURS || 12);     // Telegram digest cadence
+/* Telegram digest now fires at fixed clock hours (UTC) instead of a rolling
+   interval. Mali runs on GMT (UTC+0), so "8,19" = 8am & 7pm local. */
+const PUSH_AT     = (process.env.PUSH_AT || '8,19').split(',')
+  .map(n => +n.trim()).filter(n => Number.isInteger(n) && n >= 0 && n < 24);
+const NL_DAY      = +(process.env.NEWSLETTER_DAY ?? 1);  // weekly Brief: 0=Sun … 1=Mon
+const NL_HOUR     = +(process.env.NEWSLETTER_HOUR ?? 8); // hour (UTC) to send the Brief
+const NL_KEY      = process.env.NEWSLETTER_KEY || '';    // secret for the manual/cron trigger
 const PUBLIC      = path.join(__dirname, 'public');
+
+/* Widest gap (hours) between two consecutive push times — the digest window, so
+   nothing published between sends is missed (the per-article dedupe avoids
+   repeats on overlap). E.g. [8,19] → gaps 11h & 13h → window 13h. */
+const PUSH_WINDOW = (() => {
+  if (PUSH_AT.length < 2) return 24;
+  const h = [...PUSH_AT].sort((a, b) => a - b);
+  let max = h[0] + 24 - h[h.length - 1];                 // wrap-around gap
+  for (let i = 1; i < h.length; i++) max = Math.max(max, h[i] - h[i - 1]);
+  return max;
+})();
 
 const state = { articles: [], updated: null, building: false, seeded: false };
 
@@ -57,13 +75,67 @@ async function refresh(){
   }
 }
 
-/* Push a digest to Telegram (slow cadence — e.g. every 12h). */
+/* Push a digest to Telegram. Window covers the gap since the previous send so
+   nothing is missed; per-article dedupe prevents repeats on overlap. */
 async function pushCycle(){
   try {
-    const res = await notify.pushDigest(state.articles, PUSH_HOURS);
+    const res = await notify.pushDigest(state.articles, PUSH_WINDOW);
     console.log(`[push] ${new Date().toISOString()} | ${JSON.stringify(res)}`);
   } catch (e) {
     console.error('[push] error:', e.message);
+  }
+}
+
+/* Fire the digest at fixed UTC hours (PUSH_AT). Guarded so it sends at most once
+   per hour-slot even though the clock is checked every minute. */
+let lastPushSlot = null;
+async function pushCheck(){
+  const now = new Date();
+  if (!PUSH_AT.includes(now.getUTCHours())) return;
+  const slot = now.toISOString().slice(0, 13);   // yyyy-mm-ddThh
+  if (lastPushSlot === slot) return;
+  lastPushSlot = slot;
+  await pushCycle();
+}
+
+/* ISO-8601 week key (e.g. "2026-W25") — used so the weekly Brief fires at most
+   once per calendar week, even if the process restarts mid-week. */
+function isoWeek(d = new Date()){
+  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const day = t.getUTCDay() || 7;            // Mon=1 … Sun=7
+  t.setUTCDate(t.getUTCDate() + 4 - day);    // nearest Thursday
+  const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  const wk = Math.ceil((((t - yearStart) / 86400000) + 1) / 7);
+  return `${t.getUTCFullYear()}-W${String(wk).padStart(2, '0')}`;
+}
+
+/* Build both language issues and push the Brief; records the week so it won't
+   repeat. `force` (manual/cron trigger) bypasses the once-per-week guard. */
+async function sendBrief(force){
+  if (!state.articles.length) return { ok: false, error: 'no articles yet' };
+  const week = isoWeek();
+  if (!force && store.getMeta('lastBriefWeek') === week) return { ok: false, skipped: 'already sent this week' };
+  const issueFr = newsletter.buildIssue(state.articles, 'fr');
+  const issueEn = newsletter.buildIssue(state.articles, 'en');
+  const res = await notify.pushNewsletter(issueFr, issueEn);
+  store.setMeta('lastBriefWeek', week);
+  store.setMeta('lastBriefAt', new Date().toISOString());
+  return { ...res, week };
+}
+
+/* Best-effort weekly scheduler: on each tick, send if it's the configured
+   day/hour (UTC) and we haven't sent this week. Reliable delivery on a sleepy
+   host should use the key-guarded /api/newsletter/send trigger via an external
+   weekly cron. */
+async function newsletterCheck(){
+  try {
+    const now = new Date();
+    if (now.getUTCDay() !== NL_DAY || now.getUTCHours() !== NL_HOUR) return;
+    if (store.getMeta('lastBriefWeek') === isoWeek()) return;
+    const res = await sendBrief(false);
+    console.log(`[newsletter] weekly send → ${JSON.stringify(res)}`);
+  } catch (e) {
+    console.error('[newsletter] check error:', e.message);
   }
 }
 
@@ -125,6 +197,20 @@ const server = http.createServer(async (req, res) => {
   try {
     if (p === '/api/news') return sendJSON(res, 200, newsPayload());
 
+    if (p === '/api/newsletter') {
+      const lang = url.searchParams.get('lang') === 'en' ? 'en' : 'fr';
+      return sendJSON(res, 200, newsletter.buildIssue(state.articles, lang));
+    }
+
+    /* Key-guarded trigger so an external weekly cron can push the Brief
+       reliably (in-process timers reset when a sleepy free host restarts). */
+    if (p === '/api/newsletter/send') {
+      if (!NL_KEY) return sendJSON(res, 404, { error: 'not enabled' });
+      if (url.searchParams.get('key') !== NL_KEY) return sendJSON(res, 403, { error: 'forbidden' });
+      const force = url.searchParams.get('force') === '1';
+      return sendJSON(res, 200, await sendBrief(force));
+    }
+
     if (p === '/api/status') {
       return sendJSON(res, 200, { updated: state.updated, articles: state.articles.length,
         subscribers: store.counts(), pushConfigured: notify.isConfigured() });
@@ -166,6 +252,7 @@ const server = http.createServer(async (req, res) => {
     // ---- static / pages ----
     if (p === '/' || p === '/index.html') return serveStatic(res, 'index.html');
     if (p === '/subscribe' || p === '/landing' || p === '/subscribe.html') return serveStatic(res, 'landing.html');
+    if (p === '/newsletter' || p === '/brief' || p === '/newsletter.html') return serveStatic(res, 'newsletter.html');
     return serveStatic(res, p.replace(/^\/+/, ''));
   } catch (e) {
     console.error('[request]', e.message);
@@ -176,8 +263,13 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log(`\n  Le Vieillard running → http://localhost:${PORT}`);
   console.log(`  News app: /   ·   Subscribe: /subscribe   ·   API: /api/news`);
-  console.log(`  Push configured: ${notify.isConfigured()} | feed refresh ${REFRESH_MIN} min | Telegram digest every ${PUSH_HOURS}h\n`);
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  console.log(`  Push configured: ${notify.isConfigured()} | feed refresh ${REFRESH_MIN} min`);
+  console.log(`  Telegram digest at ${PUSH_AT.map(h => h + ':00').join(' & ')} UTC (window ${PUSH_WINDOW}h)`);
+  console.log(`  Weekly Brief: ${dayNames[NL_DAY]} ${NL_HOUR}:00 UTC | cron trigger ${NL_KEY ? 'enabled' : 'disabled (set NEWSLETTER_KEY)'}\n`);
   refresh();
   setInterval(refresh, REFRESH_MIN * 60 * 1000);
-  setInterval(pushCycle, PUSH_HOURS * 3600 * 1000);
+  /* One clock tick a minute drives both schedulers (digest at PUSH_AT hours,
+     weekly Brief on its day/hour) — accurate to within a minute of the hour. */
+  setInterval(() => { pushCheck(); newsletterCheck(); }, 60 * 1000);
 });
