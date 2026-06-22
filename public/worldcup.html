@@ -260,6 +260,47 @@
 
   /* ── Info banner ── */
   .info-banner { border-left: 2px solid var(--brand); background: var(--bg-secondary); border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: .55rem .75rem; font-size: 12px; color: var(--text-secondary); margin-bottom: .75rem; }
+
+  /* ── Responsive: tablet ── */
+  @media (max-width: 920px) {
+    body { padding: .75rem; }
+    /* sidebar becomes a stacked top bar with a horizontally-scrolling nav.
+       minmax(0,1fr)+min-width:0 let the column shrink to the viewport instead of
+       being forced wide by its content (the grid min-content trap). */
+    .db { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+    .main { min-width: 0; }
+    .sidebar { border-right: none; border-bottom: 0.5px solid var(--border); }
+    .sidebar-label { display: none; }
+    .sidebar-section { display: flex; overflow-x: auto; flex: none; padding: 0; scrollbar-width: none; }
+    .sidebar-section::-webkit-scrollbar { display: none; }
+    .nav-item { border-left: none; border-bottom: 2px solid transparent; white-space: nowrap; padding: 10px 14px; }
+    .nav-item.active { border-left: none; border-bottom-color: var(--text); }
+    .sidebar-footer { display: flex; align-items: center; gap: 10px; }
+    .sidebar-footer .lbl { display: none; }
+    .sidebar-footer .val { margin-top: 0; }
+    .refresh-btn { width: auto; margin-top: 0; margin-left: auto; white-space: nowrap; }
+    .main { max-height: none; overflow: visible; min-width: 0; }
+    .two-col { grid-template-columns: 1fr; }
+    .two-col > * { min-width: 0; }
+    .kpi { min-width: 0; }
+  }
+
+  /* ── Responsive: phone ── */
+  @media (max-width: 560px) {
+    body { padding: 0; }
+    .db { border-radius: 0; border-left: none; border-right: none; box-shadow: none; }
+    .pane { padding: .9rem; }
+    .pane-title { font-size: 17px; }
+    .kpi-row { grid-template-columns: 1fr 1fr !important; gap: 8px; }
+    .kpi { padding: .6rem .75rem; }
+    .kpi-val { font-size: 22px; }
+    /* wide tables (standings) scroll horizontally instead of squishing */
+    .card-body { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { min-width: 360px; }
+    /* 16px inputs stop iOS Safari from zooming on focus */
+    .filter-row input, .filter-row select { font-size: 16px; }
+    .mcard-top { grid-template-columns: 1fr 56px 1fr; }
+  }
 </style>
 </head>
 <body>
