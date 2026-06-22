@@ -26,6 +26,7 @@ const feeds      = require('./lib/feeds');
 const store      = require('./lib/store');
 const notify     = require('./lib/notify');
 const newsletter = require('./lib/newsletter');
+const worldcup   = require('./lib/worldcup');
 
 const PORT        = +(process.env.PORT || 8132);
 const REFRESH_MIN = +(process.env.REFRESH_MIN || 8);    // website feed refresh
@@ -200,6 +201,11 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/newsletter') {
       const lang = url.searchParams.get('lang') === 'en' ? 'en' : 'fr';
       return sendJSON(res, 200, newsletter.buildIssue(state.articles, lang));
+    }
+
+    if (p === '/api/worldcup/live') {
+      try { return sendJSON(res, 200, await worldcup.fetchLive()); }
+      catch (e) { return sendJSON(res, 200, { updated: new Date().toISOString(), events: [], error: e.message }); }
     }
 
     /* Key-guarded trigger so an external weekly cron can push the Brief

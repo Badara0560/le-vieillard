@@ -5,49 +5,61 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Coupe du Monde 2026 — Tableau de bord</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   /* ── Reset ── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   /* ── Tokens ── */
   :root {
+    /* Le Vieillard editorial palette — paper/ink neutrals + brand red, gold, green */
     --bg: #ffffff;
-    --bg-secondary: #f5f5f3;
-    --bg-tertiary: #eeede8;
-    --bg-info: #e6f1fb;
-    --bg-success: #eaf3de;
-    --bg-danger: #fcebeb;
-    --bg-warning: #faeeda;
-    --text: #1a1a18;
-    --text-secondary: #5f5e5a;
-    --text-tertiary: #888780;
-    --text-info: #185fa5;
-    --text-success: #3b6d11;
-    --text-danger: #a32d2d;
-    --border: rgba(0,0,0,0.12);
-    --border-hover: rgba(0,0,0,0.22);
+    --bg-secondary: #f6f4ef;
+    --bg-tertiary: #eae7dd;
+    --bg-info: #f6ecd4;
+    --bg-success: #e7f0e3;
+    --bg-danger: #f7e4e4;
+    --bg-warning: #f7ecd6;
+    --text: #15130f;
+    --text-secondary: #5a554c;
+    --text-tertiary: #8a857b;
+    --text-info: #8a6608;
+    --text-success: #1b6b46;
+    --text-danger: #b8121b;
+    --brand: #b8121b;
+    --gold: #c8920f;
+    --green: #1b6b46;
+    --border: #e4e0d6;
+    --border-hover: #d2ccbe;
     --radius-md: 8px;
     --radius-lg: 12px;
-    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --serif: 'Playfair Display', Georgia, serif;
+    --font: 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
   }
 
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #1c1c1a;
-      --bg-secondary: #252523;
-      --bg-tertiary: #2e2e2b;
-      --bg-info: #042c53;
-      --bg-success: #173404;
-      --bg-danger: #501313;
-      --bg-warning: #412402;
-      --text: #f0efeb;
-      --text-secondary: #b4b2a9;
-      --text-tertiary: #888780;
-      --text-info: #85b7eb;
-      --text-success: #97c459;
-      --text-danger: #f09595;
-      --border: rgba(255,255,255,0.12);
-      --border-hover: rgba(255,255,255,0.22);
+      /* Le Vieillard dark palette */
+      --bg: #201d16;
+      --bg-secondary: #1e1b15;
+      --bg-tertiary: #16140f;
+      --bg-info: #3a2c0c;
+      --bg-success: #16331f;
+      --bg-danger: #3f1414;
+      --bg-warning: #3a2c0c;
+      --text: #f4f1e9;
+      --text-secondary: #a9a294;
+      --text-tertiary: #7d776b;
+      --text-info: #d8a93a;
+      --text-success: #7cc08e;
+      --text-danger: #e88a8a;
+      --brand: #d6404a;
+      --gold: #d8a93a;
+      --green: #7cc08e;
+      --border: #332f26;
+      --border-hover: #4a4534;
     }
   }
 
@@ -138,12 +150,12 @@
   .main { overflow-y: auto; max-height: 800px; }
   .pane { display: none; padding: 1.25rem; }
   .pane.active { display: block; }
-  .pane-title { font-size: 16px; font-weight: 500; margin-bottom: 1rem; }
+  .pane-title { font-family: var(--serif); font-size: 19px; font-weight: 800; margin-bottom: 1rem; letter-spacing: -.01em; }
 
   /* ── KPI row ── */
   .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.25rem; }
   .kpi { background: var(--bg-secondary); border-radius: var(--radius-md); padding: .75rem 1rem; }
-  .kpi-val { font-size: 22px; font-weight: 500; }
+  .kpi-val { font-family: var(--serif); font-size: 26px; font-weight: 800; letter-spacing: -.01em; }
   .kpi-lbl { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
   .kpi-sub { font-size: 10px; color: var(--text-tertiary); margin-top: 1px; }
 
@@ -170,15 +182,15 @@
   .b-up { background: var(--bg-info); color: var(--text-info); }
 
   /* ── Cards discipline ── */
-  .yc { display: inline-block; width: 8px; height: 11px; background: #EF9F27; border-radius: 1px; vertical-align: middle; margin-right: 1px; }
-  .rc { display: inline-block; width: 8px; height: 11px; background: #E24B4A; border-radius: 1px; vertical-align: middle; margin-right: 1px; }
+  .yc { display: inline-block; width: 8px; height: 11px; background: #d6a417; border-radius: 1px; vertical-align: middle; margin-right: 1px; }
+  .rc { display: inline-block; width: 8px; height: 11px; background: var(--brand); border-radius: 1px; vertical-align: middle; margin-right: 1px; }
 
   /* ── Table ── */
   table { width: 100%; border-collapse: collapse; font-size: 12px; }
   th { padding: 5px 6px; text-align: left; color: var(--text-secondary); font-weight: 500; border-bottom: 0.5px solid var(--border); font-size: 11px; }
   td { padding: 5px 6px; border-bottom: 0.5px solid var(--border); }
   tr:last-child td { border: none; }
-  .q { background: rgba(29,158,117,0.08); }
+  .q { background: rgba(27,107,70,0.10); }
 
   /* ── Group tabs ── */
   .group-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: .75rem; }
@@ -213,7 +225,7 @@
   .bar-fill { height: 100%; border-radius: 3px; transition: width .4s ease; }
 
   /* ── Live pulse ── */
-  .live-pulse { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #E24B4A; margin-right: 5px; animation: pulse 1.5s infinite; }
+  .live-pulse { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--brand); margin-right: 5px; animation: pulse 1.5s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
   /* ── Ask buttons ── */
@@ -233,7 +245,7 @@
   .ask-btn:hover { background: var(--bg-secondary); }
 
   /* ── Insight cards ── */
-  .insight { border-left: 2px solid #185FA5; background: var(--bg-secondary); border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: .6rem .75rem; font-size: 12px; margin-bottom: 6px; }
+  .insight { border-left: 2px solid var(--gold); background: var(--bg-secondary); border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: .6rem .75rem; font-size: 12px; margin-bottom: 6px; }
 
   /* ── Flag ── */
   .flag { font-size: 16px; margin-right: 4px; }
@@ -247,7 +259,7 @@
   .q-chip { font-size: 20px; cursor: default; }
 
   /* ── Info banner ── */
-  .info-banner { border-left: 2px solid #E24B4A; background: var(--bg-secondary); border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: .55rem .75rem; font-size: 12px; color: var(--text-secondary); margin-bottom: .75rem; }
+  .info-banner { border-left: 2px solid var(--brand); background: var(--bg-secondary); border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: .55rem .75rem; font-size: 12px; color: var(--text-secondary); margin-bottom: .75rem; }
 </style>
 </head>
 <body>
@@ -272,8 +284,8 @@
     </div>
     <div class="sidebar-footer">
       <div class="lbl">Dernière mise à jour</div>
-      <div class="val">22 juin 2026</div>
-      <button class="refresh-btn" onclick="alert('Ouvrez ce tableau de bord dans Claude Cowork pour obtenir les dernières données en direct.')"><i class="ti ti-refresh"></i> Actualiser les données</button>
+      <div class="val" id="last-update">22 juin 2026</div>
+      <button class="refresh-btn" id="refresh-btn" onclick="refreshLive(true)"><i class="ti ti-refresh"></i> <span id="refresh-label">Actualiser les données</span></button>
     </div>
   </div>
 
@@ -292,9 +304,9 @@
 
       <div class="two-col">
         <div>
-          <div class="card">
-            <div class="card-head"><span class="live-pulse"></span>En direct — Groupe I</div>
-            <div class="card-body">
+          <div class="card" id="live-card">
+            <div class="card-head"><span class="live-pulse"></span><span id="live-head">En direct</span></div>
+            <div class="card-body" id="live-body">
               <div style="display:grid;grid-template-columns:1fr 56px 1fr;align-items:center;gap:6px">
                 <div class="team-l"><div class="tname">🇫🇷 France</div><div class="coach">Deschamps</div></div>
                 <div class="scorebox">1–0</div>
@@ -607,7 +619,7 @@ function renderStandings() {
     html += `<tr${r[8]?' class="q"':''}><td style="font-weight:500">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${gd>=0?'+'+gd:gd}</td><td><b>${r[7]}</b></td></tr>`;
   });
   html += `</table></div><div style="padding:.5rem 1rem;font-size:11px;color:var(--text-secondary);border-top:0.5px solid var(--border)">
-    <span style="display:inline-block;width:10px;height:10px;background:rgba(29,158,117,.15);border:0.5px solid #1D9E75;border-radius:2px;margin-right:4px"></span>Qualifié pour les 1/32 de finale
+    <span style="display:inline-block;width:10px;height:10px;background:rgba(27,107,70,.15);border:0.5px solid var(--green);border-radius:2px;margin-right:4px"></span>Qualifié pour les 1/32 de finale
   </div></div>`;
   document.getElementById('standings-table').innerHTML = html;
 }
@@ -650,7 +662,7 @@ function renderScorers() {
 renderScorers();
 
 // ── Mini scorers (aperçu) ──
-const colors = ['#185FA5','#534AB7','#0F6E56','#993C1D','#854F0B'];
+const colors = ['#b8121b','#c8920f','#1b6b46','#a85a2a','#8a6608'];
 function renderMiniScorers() {
   const top5 = scorers.slice(0,5);
   document.getElementById('mini-scorers').innerHTML = top5.map((s,i) => `
@@ -667,7 +679,7 @@ const preds = {
   gagner: [{t:'🇫🇷 France',p:18},{t:'🇩🇪 Allemagne',p:16},{t:'🇦🇷 Argentine',p:14},{t:'🇧🇷 Brésil',p:13},{t:'🇳🇱 Pays-Bas',p:9},{t:'🇳🇴 Norvège',p:7},{t:'🇯🇵 Japon',p:5},{t:'🇺🇸 États-Unis',p:5},{t:'🇪🇸 Espagne',p:4},{t:'🇲🇽 Mexique',p:3}],
   qf:     [{t:'🇫🇷 France',p:72},{t:'🇩🇪 Allemagne',p:70},{t:'🇦🇷 Argentine',p:68},{t:'🇧🇷 Brésil',p:65},{t:'🇳🇱 Pays-Bas',p:58},{t:'🇳🇴 Norvège',p:52},{t:'🇯🇵 Japon',p:50},{t:'🇺🇸 États-Unis',p:50},{t:'🇪🇸 Espagne',p:48},{t:'🇲🇽 Mexique',p:40}],
 };
-const barColors = ['#185FA5','#534AB7','#0F6E56','#993C1D','#854F0B','#639922','#A32D2D','#185FA5','#993556','#3B6D11'];
+const barColors = ['#b8121b','#c8920f','#1b6b46','#a85a2a','#8a6608','#7a4f1d','#9d2235','#3d7a55','#b8862b','#5a554c'];
 let curPred = 'finale';
 
 function setPred(type, btn) {
@@ -686,6 +698,96 @@ function renderPred() {
     </div>`).join('');
 }
 renderPred();
+
+// ── Live refresh (TheSportsDB via the Le Vieillard backend) ──
+// The dashboard auto-refreshes the in-progress match and its score every minute.
+// Standings / scorers / predictions stay as the curated snapshot. If the backend
+// or API is unreachable, the embedded snapshot is kept untouched.
+function norm(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z]/g,''); }
+const EN2FR = {
+  iraq:'irak', norway:'norvege', senegal:'senegal', southafrica:'afriquedusud',
+  germany:'allemagne', spain:'espagne', netherlands:'paysbas', switzerland:'suisse',
+  sweden:'suede', belgium:'belgique', japan:'japon', brazil:'bresil', morocco:'maroc',
+  unitedstates:'etatsunis', usa:'etatsunis', mexico:'mexique', canada:'canada',
+  france:'france', argentina:'argentine', austria:'autriche', ivorycoast:'cotedivoire',
+  ecuador:'equateur', tunisia:'tunisie', haiti:'haiti', scotland:'ecosse', paraguay:'paraguay',
+  australia:'australie', curacao:'curacao', iran:'iran', egypt:'egypte', qatar:'qatar',
+  bosniaandherzegovina:'bosnie', bosnia:'bosnie', southkorea:'coreedusud',
+  czechrepublic:'tchequie', czechia:'tchequie', turkey:'turkiye', saudiarabia:'arabiesaoudite',
+  newzealand:'nouvellezelande', portugal:'portugal', uzbekistan:'ouzbekistan',
+  jordan:'jordanie', algeria:'algerie', england:'angleterre', ghana:'ghana'
+};
+function teamKey(apiName){ const n = norm(apiName); return EN2FR[n] || n; }
+function keyHit(k,t){ return k===t || (k.length>=4 && t.length>=4 && (k.startsWith(t)||t.startsWith(k))); }
+function sameMatch(m,e){
+  const h=teamKey(e.home), a=teamKey(e.away), t1=norm(m.t1), t2=norm(m.t2);
+  return (keyHit(h,t1)&&keyHit(a,t2)) || (keyHit(h,t2)&&keyHit(a,t1));
+}
+function statusLabel(raw){
+  raw = String(raw||'').toUpperCase().trim();
+  if (raw==='HT') return 'Mi-temps';
+  if (raw==='FT'||raw==='AET'||raw==='PEN') return 'Terminé';
+  if (raw==='NS'||raw==='') return 'À venir';
+  if (/^\d+$/.test(raw)) return raw + "'";
+  return raw;
+}
+
+function renderLiveCard(m, e){
+  const card=document.getElementById('live-card');
+  const head=document.getElementById('live-head');
+  const body=document.getElementById('live-body');
+  if (!e){ card.style.display='none'; return; }
+  card.style.display='';
+  head.textContent = 'En direct';
+  const score = (e.hs!=null && e.as!=null) ? `${e.hs}–${e.as}` : 'vs';
+  const left  = m ? `<div class="tname">${m.t1}</div><div class="coach">${m.c1||''}</div>` : `<div class="tname">${e.home}</div>`;
+  const right = m ? `<div class="tname">${m.t2}</div><div class="coach">${m.c2||''}</div>` : `<div class="tname">${e.away}</div>`;
+  body.innerHTML = `<div style="display:grid;grid-template-columns:1fr 56px 1fr;align-items:center;gap:6px">
+      <div class="team-l">${left}</div>
+      <div class="scorebox">${score}</div>
+      <div class="team-r">${right}</div>
+    </div>
+    <div style="margin-top:8px;font-size:11px;color:var(--text-secondary)">${e.venue?('📍 '+e.venue+' &nbsp;|&nbsp; '):''}${statusLabel(e.raw)}</div>`;
+}
+
+function applyLive(events){
+  if (!events || !events.length) return;     // nothing live → keep the snapshot
+  let liveM=null, liveE=null;
+  events.forEach(e => {
+    if (!e || (e.status!=='LIVE' && e.status!=='FT')) return;
+    const m = matches.find(mm => sameMatch(mm,e));
+    if (m){
+      if (e.status==='LIVE' && e.hs!=null && e.as!=null){ m.s=`${e.hs}–${e.as}`; m.st='LIVE'; }
+      // a match that was live and is now finished gets its final score
+      else if (e.status==='FT' && m.st==='LIVE' && e.hs!=null && e.as!=null){ m.s=`${e.hs}–${e.as}`; m.st='FT'; }
+    }
+    if (e.status==='LIVE' && !liveE){ liveE=e; liveM=m; }
+  });
+  renderLiveCard(liveM, liveE);
+  filterMatches();   // re-render the matches pane with any updated scores
+}
+
+let refreshing=false;
+async function refreshLive(manual){
+  if (refreshing) return; refreshing=true;
+  const lbl=document.getElementById('refresh-label');
+  const btn=document.getElementById('refresh-btn');
+  const prev=lbl?lbl.textContent:'';
+  if (manual && lbl) lbl.textContent='Actualisation…';
+  if (btn) btn.disabled=true;
+  try{
+    const r=await fetch('/api/worldcup/live',{cache:'no-store'});
+    const data=await r.json();
+    applyLive(data.events||[]);
+    const t=new Date(data.updated||Date.now());
+    document.getElementById('last-update').textContent =
+      t.toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  }catch(e){ /* offline / file opened directly → keep snapshot */ }
+  finally{ if(lbl) lbl.textContent=manual?(prev||'Actualiser les données'):lbl.textContent; if(btn) btn.disabled=false; refreshing=false; }
+}
+
+refreshLive(false);
+setInterval(()=>refreshLive(false), 60000);
 </script>
 </body>
 </html>
