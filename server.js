@@ -253,6 +253,7 @@ const server = http.createServer(async (req, res) => {
     if (p === '/' || p === '/index.html') return serveStatic(res, 'index.html');
     if (p === '/subscribe' || p === '/landing' || p === '/subscribe.html') return serveStatic(res, 'landing.html');
     if (p === '/newsletter' || p === '/brief' || p === '/newsletter.html') return serveStatic(res, 'newsletter.html');
+    if (p === '/worldcup' || p === '/coupe-du-monde' || p === '/mondial' || p === '/worldcup.html') return serveStatic(res, 'worldcup.html');
     return serveStatic(res, p.replace(/^\/+/, ''));
   } catch (e) {
     console.error('[request]', e.message);

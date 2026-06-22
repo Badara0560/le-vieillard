@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coupe du Monde 2026 — Tableau de bord</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+  /* ── Reset ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── Tokens ── */
+  :root {
+    --bg: #ffffff;
+    --bg-secondary: #f5f5f3;
+    --bg-tertiary: #eeede8;
+    --bg-info: #e6f1fb;
+    --bg-success: #eaf3de;
+    --bg-danger: #fcebeb;
+    --bg-warning: #faeeda;
+    --text: #1a1a18;
+    --text-secondary: #5f5e5a;
+    --text-tertiary: #888780;
+    --text-info: #185fa5;
+    --text-success: #3b6d11;
+    --text-danger: #a32d2d;
+    --border: rgba(0,0,0,0.12);
+    --border-hover: rgba(0,0,0,0.22);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg-secondary: #252523;
+      --bg-tertiary: #2e2e2b;
+      --bg-info: #042c53;
+      --bg-success: #173404;
+      --bg-danger: #501313;
+      --bg-warning: #412402;
+      --text: #f0efeb;
+      --text-secondary: #b4b2a9;
+      --text-tertiary: #888780;
+      --text-info: #85b7eb;
+      --text-success: #97c459;
+      --text-danger: #f09595;
+      --border: rgba(255,255,255,0.12);
+      --border-hover: rgba(255,255,255,0.22);
+    }
+  }
+
+  body {
+    font-family: var(--font);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--bg-tertiary);
+    min-height: 100vh;
+    padding: 1.5rem;
+  }
+
+  /* ── Layout ── */
+  .db {
+    display: grid;
+    grid-template-columns: 190px 1fr;
+    min-height: 640px;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--bg);
+    max-width: 1100px;
+    margin: 0 auto;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    background: var(--bg-secondary);
+    border-right: 0.5px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-brand {
+    padding: 1rem;
+    border-bottom: 0.5px solid var(--border);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .sidebar-brand span { font-size: 11px; color: var(--text-tertiary); display: block; margin-top: 2px; }
+  .sidebar-section { padding: .5rem 0; flex: 1; }
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-tertiary);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .5rem 1rem .25rem;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 1rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 13px;
+    border-left: 2px solid transparent;
+    transition: all .12s;
+    user-select: none;
+  }
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active { background: var(--bg); color: var(--text); border-left-color: var(--text); font-weight: 500; }
+  .nav-item i { font-size: 16px; }
+  .sidebar-footer {
+    padding: 1rem;
+    border-top: 0.5px solid var(--border);
+    font-size: 11px;
+  }
+  .sidebar-footer .lbl { color: var(--text-tertiary); }
+  .sidebar-footer .val { font-weight: 500; margin-top: 2px; }
+  .refresh-btn {
+    margin-top: 8px;
+    width: 100%;
+    padding: 6px 10px;
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-hover);
+    background: transparent;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 11px;
+    text-align: left;
+    font-family: var(--font);
+  }
+  .refresh-btn:hover { background: var(--bg-secondary); }
+
+  /* ── Main ── */
+  .main { overflow-y: auto; max-height: 800px; }
+  .pane { display: none; padding: 1.25rem; }
+  .pane.active { display: block; }
+  .pane-title { font-size: 16px; font-weight: 500; margin-bottom: 1rem; }
+
+  /* ── KPI row ── */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.25rem; }
+  .kpi { background: var(--bg-secondary); border-radius: var(--radius-md); padding: .75rem 1rem; }
+  .kpi-val { font-size: 22px; font-weight: 500; }
+  .kpi-lbl { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .kpi-sub { font-size: 10px; color: var(--text-tertiary); margin-top: 1px; }
+
+  /* ── Cards ── */
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); margin-bottom: .75rem; overflow: hidden; }
+  .card-head { padding: .55rem 1rem; border-bottom: 0.5px solid var(--border); font-weight: 500; font-size: 13px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-secondary); }
+  .card-body { padding: .75rem 1rem; }
+
+  /* ── Match cards ── */
+  .mcard { border: 0.5px solid var(--border); border-radius: var(--radius-md); margin-bottom: .5rem; overflow: hidden; }
+  .mcard-top { display: grid; grid-template-columns: 1fr 74px 1fr; align-items: center; padding: .6rem .75rem; gap: 6px; }
+  .mcard-btm { padding: .35rem .75rem; border-top: 0.5px solid var(--border); font-size: 11px; color: var(--text-secondary); display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--bg-secondary); }
+  .team-l { text-align: right; }
+  .team-r { text-align: left; }
+  .tname { font-weight: 500; font-size: 13px; }
+  .coach { font-size: 10px; color: var(--text-tertiary); }
+  .scorebox { text-align: center; background: var(--bg-secondary); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 3px 6px; font-size: 17px; font-weight: 500; }
+  .divider { font-size: 11px; font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .05em; margin: .75rem 0 .4rem; }
+
+  /* ── Badges ── */
+  .badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 500; }
+  .b-ft { background: var(--bg-success); color: var(--text-success); }
+  .b-live { background: var(--bg-danger); color: var(--text-danger); }
+  .b-up { background: var(--bg-info); color: var(--text-info); }
+
+  /* ── Cards discipline ── */
+  .yc { display: inline-block; width: 8px; height: 11px; background: #EF9F27; border-radius: 1px; vertical-align: middle; margin-right: 1px; }
+  .rc { display: inline-block; width: 8px; height: 11px; background: #E24B4A; border-radius: 1px; vertical-align: middle; margin-right: 1px; }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { padding: 5px 6px; text-align: left; color: var(--text-secondary); font-weight: 500; border-bottom: 0.5px solid var(--border); font-size: 11px; }
+  td { padding: 5px 6px; border-bottom: 0.5px solid var(--border); }
+  tr:last-child td { border: none; }
+  .q { background: rgba(29,158,117,0.08); }
+
+  /* ── Group tabs ── */
+  .group-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: .75rem; }
+  .gtab { padding: 3px 10px; border: 0.5px solid var(--border); border-radius: 20px; cursor: pointer; font-size: 12px; color: var(--text-secondary); background: transparent; user-select: none; }
+  .gtab.active { background: var(--bg-secondary); color: var(--text); border-color: var(--border-hover); font-weight: 500; }
+
+  /* ── Filters ── */
+  .filter-row { display: flex; gap: 8px; margin-bottom: .75rem; flex-wrap: wrap; align-items: center; }
+  .filter-row input, .filter-row select {
+    padding: 5px 10px;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+    color: var(--text);
+    font-size: 12px;
+    font-family: var(--font);
+    outline: none;
+  }
+  .filter-row input { flex: 1; min-width: 120px; }
+  .filter-row input:focus, .filter-row select:focus { border-color: var(--border-hover); }
+
+  /* ── Two columns ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* ── Predictions ── */
+  .seg { display: flex; gap: 4px; background: var(--bg-secondary); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 3px; width: fit-content; margin-bottom: .75rem; }
+  .seg-btn { padding: 4px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; border: none; background: transparent; color: var(--text-secondary); font-family: var(--font); }
+  .seg-btn.active { background: var(--bg); color: var(--text); font-weight: 500; border: 0.5px solid var(--border); }
+  .pred-row { margin-bottom: 9px; }
+  .pred-lbl { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px; }
+  .bar-wrap { height: 6px; border-radius: 3px; background: var(--bg-secondary); overflow: hidden; margin: 3px 0; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width .4s ease; }
+
+  /* ── Live pulse ── */
+  .live-pulse { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #E24B4A; margin-right: 5px; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* ── Ask buttons ── */
+  .ask-btn {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-hover);
+    background: transparent;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 13px;
+    margin-top: 8px;
+    text-align: left;
+    font-family: var(--font);
+  }
+  .ask-btn:hover { background: var(--bg-secondary); }
+
+  /* ── Insight cards ── */
+  .insight { border-left: 2px solid #185FA5; background: var(--bg-secondary); border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: .6rem .75rem; font-size: 12px; margin-bottom: 6px; }
+
+  /* ── Flag ── */
+  .flag { font-size: 16px; margin-right: 4px; }
+
+  /* ── Mini bar ── */
+  .mini-bar-wrap { height: 5px; border-radius: 3px; background: var(--bg-tertiary); overflow: hidden; margin: 3px 0 1px; }
+  .mini-bar-fill { height: 100%; border-radius: 3px; }
+
+  /* ── Qualified chips ── */
+  .q-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .q-chip { font-size: 20px; cursor: default; }
+
+  /* ── Info banner ── */
+  .info-banner { border-left: 2px solid #E24B4A; background: var(--bg-secondary); border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: .55rem .75rem; font-size: 12px; color: var(--text-secondary); margin-bottom: .75rem; }
+</style>
+</head>
+<body>
+
+<div class="db">
+
+  <!-- ══ SIDEBAR ══ -->
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      🏆 Coupe du Monde
+      <span>FIFA 2026 · Canada / USA / Mexique</span>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navigation</div>
+      <div class="nav-item active" onclick="nav('apercu',this)"><i class="ti ti-layout-dashboard"></i>Aperçu</div>
+      <div class="nav-item" onclick="nav('matchs',this)"><i class="ti ti-ball-football"></i>Matchs</div>
+      <div class="nav-item" onclick="nav('classement',this)"><i class="ti ti-table"></i>Classement</div>
+      <div class="nav-item" onclick="nav('buteurs',this)"><i class="ti ti-award"></i>Buteurs</div>
+      <div class="nav-item" onclick="nav('cartons',this)"><i class="ti ti-cards"></i>Cartons</div>
+      <div class="nav-item" onclick="nav('programme',this)"><i class="ti ti-calendar"></i>Programme</div>
+      <div class="nav-item" onclick="nav('analytique',this)"><i class="ti ti-chart-bar"></i>Analytique</div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="lbl">Dernière mise à jour</div>
+      <div class="val">22 juin 2026</div>
+      <button class="refresh-btn" onclick="alert('Ouvrez ce tableau de bord dans Claude Cowork pour obtenir les dernières données en direct.')"><i class="ti ti-refresh"></i> Actualiser les données</button>
+    </div>
+  </div>
+
+  <!-- ══ MAIN ══ -->
+  <div class="main">
+
+    <!-- APERÇU -->
+    <div id="pane-apercu" class="pane active">
+      <div class="pane-title">Aperçu général</div>
+      <div class="kpi-row">
+        <div class="kpi"><div class="kpi-val">81</div><div class="kpi-lbl">Buts marqués</div><div class="kpi-sub">2,25 par match</div></div>
+        <div class="kpi"><div class="kpi-val">36</div><div class="kpi-lbl">Matchs joués</div><div class="kpi-sub">sur 104 au total</div></div>
+        <div class="kpi"><div class="kpi-val" style="color:#E24B4A">14</div><div class="kpi-lbl">Cartons rouges</div><div class="kpi-sub">Rythme record</div></div>
+        <div class="kpi"><div class="kpi-val">18</div><div class="kpi-lbl">Buts Messi (CM)</div><div class="kpi-sub">Record absolu 🐐</div></div>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <div class="card">
+            <div class="card-head"><span class="live-pulse"></span>En direct — Groupe I</div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:1fr 56px 1fr;align-items:center;gap:6px">
+                <div class="team-l"><div class="tname">🇫🇷 France</div><div class="coach">Deschamps</div></div>
+                <div class="scorebox">1–0</div>
+                <div class="team-r"><div class="tname">🇮🇶 Irak</div><div class="coach">Casas</div></div>
+              </div>
+              <div style="margin-top:8px;font-size:11px;color:var(--text-secondary)">⚽ Mbappé 44' &nbsp;|&nbsp; Mi-temps</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head">Meilleur buteur</div>
+            <div class="card-body" style="display:flex;align-items:center;gap:10px">
+              <div style="width:40px;height:40px;border-radius:50%;background:var(--bg-info);display:flex;align-items:center;justify-content:center;font-size:20px">🐐</div>
+              <div>
+                <div style="font-weight:500">Lionel Messi</div>
+                <div style="font-size:11px;color:var(--text-secondary)">🇦🇷 Argentine · 5 buts · 2 passes déc.</div>
+                <div style="font-size:11px;color:var(--text-tertiary)">Record CM absolu : 18 buts en carrière</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-head">Équipes qualifiées pour les 1/32</div>
+            <div class="card-body">
+              <div class="q-chips">
+                <span class="q-chip" title="Mexique">🇲🇽</span>
+                <span class="q-chip" title="Canada">🇨🇦</span>
+                <span class="q-chip" title="Suisse">🇨🇭</span>
+                <span class="q-chip" title="Brésil">🇧🇷</span>
+                <span class="q-chip" title="Maroc">🇲🇦</span>
+                <span class="q-chip" title="États-Unis">🇺🇸</span>
+                <span class="q-chip" title="Allemagne">🇩🇪</span>
+                <span class="q-chip" title="Pays-Bas">🇳🇱</span>
+                <span class="q-chip" title="Japon">🇯🇵</span>
+                <span class="q-chip" title="France">🇫🇷</span>
+                <span class="q-chip" title="Norvège">🇳🇴</span>
+                <span class="q-chip" title="Argentine">🇦🇷</span>
+              </div>
+              <div style="margin-top:8px;font-size:11px;color:var(--text-secondary)">12 places sur 32 confirmées · 20 encore ouvertes</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head">Course au Soulier d'Or</div>
+            <div class="card-body" id="mini-scorers"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MATCHS -->
+    <div id="pane-matchs" class="pane">
+      <div class="pane-title">Résultats des matchs</div>
+      <div class="filter-row">
+        <input type="text" id="match-search" placeholder="Rechercher une équipe…" oninput="filterMatches()">
+        <select id="match-group" onchange="filterMatches()">
+          <option value="">Tous les groupes</option>
+          <option>Groupe A</option><option>Groupe B</option><option>Groupe C</option>
+          <option>Groupe D</option><option>Groupe E</option><option>Groupe F</option>
+          <option>Groupe G</option><option>Groupe H</option><option>Groupe I</option>
+        </select>
+        <select id="match-day" onchange="filterMatches()">
+          <option value="">Toutes les journées</option>
+          <option>J1</option><option>J2</option><option>J3</option>
+        </select>
+      </div>
+      <div id="match-list"></div>
+    </div>
+
+    <!-- CLASSEMENT -->
+    <div id="pane-classement" class="pane">
+      <div class="pane-title">Classement par groupe</div>
+      <div class="group-tabs" id="group-tabs"></div>
+      <div id="standings-table"></div>
+    </div>
+
+    <!-- BUTEURS -->
+    <div id="pane-buteurs" class="pane">
+      <div class="pane-title">Meilleurs buteurs</div>
+      <div style="margin-bottom:.75rem;font-size:12px;color:var(--text-secondary)">Course au Soulier d'Or adidas · mis à jour après chaque match</div>
+      <div id="scorers-list"></div>
+    </div>
+
+    <!-- CARTONS -->
+    <div id="pane-cartons" class="pane">
+      <div class="pane-title">Cartons disciplinaires</div>
+      <div class="kpi-row" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="kpi"><div class="kpi-val" style="color:#EF9F27">74</div><div class="kpi-lbl">Cartons jaunes</div></div>
+        <div class="kpi"><div class="kpi-val" style="color:#E24B4A">14</div><div class="kpi-lbl">Cartons rouges</div></div>
+        <div class="kpi"><div class="kpi-val">2,06</div><div class="kpi-lbl">Cartons par match</div></div>
+      </div>
+      <div class="info-banner">
+        En 2026, autant de cartons rouges en 27 matchs que lors des deux dernières Coupes du Monde combinées. Les arbitres appliquent des directives plus strictes.
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head"><span class="rc"></span> Cartons rouges</div>
+          <div class="card-body" style="padding:0">
+            <table>
+              <tr><th>Joueur</th><th>Pays</th><th>Contre</th><th>Min</th></tr>
+              <tr><td>Hlanti S.</td><td>🇿🇦 AFS</td><td>MEX</td><td>71'</td></tr>
+              <tr><td>Bogado R.</td><td>🇵🇾 PAR</td><td>USA</td><td>88'</td></tr>
+              <tr><td>Dorléus K.</td><td>🇭🇹 HAI</td><td>ECO</td><td>58'</td></tr>
+              <tr><td>Hosseini M.</td><td>🇮🇷 IRN</td><td>BEL</td><td>79'</td></tr>
+              <tr><td>Ben Amor H.</td><td>🇹🇳 TUN</td><td>JAP</td><td>40'</td></tr>
+              <tr><td>Al Rawi B.</td><td>🇶🇦 QAT</td><td>CAN</td><td>60'</td></tr>
+              <tr><td>Sangare I.</td><td>🇨🇮 CIV</td><td>ALL</td><td>70'</td></tr>
+              <tr><td>Jean-Baptiste R.</td><td>🇭🇹 HAI</td><td>BRE</td><td>55'</td></tr>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="yc"></span> Plus de cartons jaunes</div>
+          <div class="card-body" style="padding:0">
+            <table>
+              <tr><th>Joueur</th><th>Pays</th><th>CJ</th></tr>
+              <tr><td>Pjanić M.</td><td>🇧🇦 BIH</td><td><b>2</b></td></tr>
+              <tr><td>Gómez R.</td><td>🇵🇾 PAR</td><td><b>2</b></td></tr>
+              <tr><td>Alaba D.</td><td>🇦🇹 AUT</td><td><b>2</b></td></tr>
+              <tr><td>Sabitzer M.</td><td>🇦🇹 AUT</td><td>1</td></tr>
+              <tr><td>Amrabat S.</td><td>🇲🇦 MAR</td><td>1</td></tr>
+              <tr><td>Koulibaly K.</td><td>🇸🇳 SEN</td><td>1</td></tr>
+              <tr><td>Tau P.</td><td>🇿🇦 AFS</td><td>1</td></tr>
+              <tr><td>Al Haydos H.</td><td>🇶🇦 QAT</td><td>1</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROGRAMME -->
+    <div id="pane-programme" class="pane">
+      <div class="pane-title">Programme à venir</div>
+      <div class="divider">22 juin — ce soir</div>
+      <div class="mcard">
+        <div class="mcard-top">
+          <div class="team-l"><div class="tname">🇫🇷 France</div><div class="coach">Deschamps</div></div>
+          <div style="text-align:center"><div class="scorebox" style="font-size:13px">vs</div><div style="margin-top:3px"><span class="badge b-live">EN COURS</span></div></div>
+          <div class="team-r"><div class="tname">🇮🇶 Irak</div><div class="coach">Casas</div></div>
+        </div>
+        <div class="mcard-btm"><span>Groupe I · Philadelphie</span><span>2e mi-temps en cours</span></div>
+      </div>
+      <div class="mcard">
+        <div class="mcard-top">
+          <div class="team-l"><div class="tname">🇳🇴 Norvège</div><div class="coach">Solbakken</div></div>
+          <div style="text-align:center"><div class="scorebox" style="font-size:13px">vs</div><div style="margin-top:3px"><span class="badge b-up">21h00 ET</span></div></div>
+          <div class="team-r"><div class="tname">🇸🇳 Sénégal</div><div class="coach">Cissé</div></div>
+        </div>
+        <div class="mcard-btm"><span>Groupe I · Kansas City</span><span>Haaland vs Sarr</span></div>
+      </div>
+      <div class="mcard">
+        <div class="mcard-top">
+          <div class="team-l"><div class="tname">🇯🇴 Jordanie</div><div class="coach">A. Katbi</div></div>
+          <div style="text-align:center"><div class="scorebox" style="font-size:13px">vs</div><div style="margin-top:3px"><span class="badge b-up">23h00 ET</span></div></div>
+          <div class="team-r"><div class="tname">🇩🇿 Algérie</div><div class="coach">Petkovic</div></div>
+        </div>
+        <div class="mcard-btm"><span>Groupe J · Toronto</span><span>—</span></div>
+      </div>
+      <div class="divider">23 juin</div>
+      <div class="mcard">
+        <div class="mcard-top">
+          <div class="team-l"><div class="tname">🇺🇿 Ouzbékistan</div><div class="coach">Shomurodov</div></div>
+          <div style="text-align:center"><div class="scorebox" style="font-size:13px">vs</div><div style="margin-top:3px"><span class="badge b-up">23 juin</span></div></div>
+          <div class="team-r"><div class="tname">🇵🇹 Portugal</div><div class="coach">R. Martínez</div></div>
+        </div>
+        <div class="mcard-btm"><span>Groupe K · Los Angeles</span><span>Les adieux de Ronaldo ?</span></div>
+      </div>
+      <div class="mcard">
+        <div class="mcard-top">
+          <div class="team-l"><div class="tname">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre</div><div class="coach">Tuchel</div></div>
+          <div style="text-align:center"><div class="scorebox" style="font-size:13px">vs</div><div style="margin-top:3px"><span class="badge b-up">23 juin</span></div></div>
+          <div class="team-r"><div class="tname">🇬🇭 Ghana</div><div class="coach">Otto Addo</div></div>
+        </div>
+        <div class="mcard-btm"><span>Groupe L · Dallas</span><span>—</span></div>
+      </div>
+      <div class="divider">1/32 de finale — à partir du 28 juin</div>
+      <div class="card">
+        <div class="card-body" style="font-size:12px;color:var(--text-secondary)">
+          La phase à élimination directe commence le 28 juin. La finale aura lieu au MetLife Stadium (New Jersey) le 19 juillet. Format : élimination directe avec prolongations et tirs au but si égalité après 90 min.
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTIQUE -->
+    <div id="pane-analytique" class="pane">
+      <div class="pane-title">Analytique &amp; prédictions</div>
+      <div class="seg" id="pred-seg">
+        <button class="seg-btn active" onclick="setPred('finale',this)">Atteindre la finale</button>
+        <button class="seg-btn" onclick="setPred('gagner',this)">Remporter le titre</button>
+        <button class="seg-btn" onclick="setPred('qf',this)">Atteindre les QF</button>
+      </div>
+      <div id="pred-bars"></div>
+
+      <div class="divider" style="margin-top:1rem">Analyses clés</div>
+      <div class="insight"><b>Allemagne</b> — la plus efficace : 9 buts en 2 matchs, +7 de différence. Undav est en feu (4 buts).</div>
+      <div class="insight"><b>France</b> — défense solide (1 but encaissé). Mbappé + Griezmann dévastateurs en transition.</div>
+      <div class="insight"><b>Argentine</b> — portée par Messi, désormais recordman absolu des buts en CM (18). L'entourage est crucial.</div>
+      <div class="insight"><b>Brésil</b> — profondeur de banc impressionnante. Vinicius, Endrick et Rayan tous buteurs. Le système Ancelotti fonctionne.</div>
+      <div class="insight"><b>Outsiders à surveiller :</b> Japon et Norvège montrent qu'ils ont leur place. Un demi-finale Haaland vs Mbappé serait iconique.</div>
+      <div class="insight"><b>Risque carton rouge :</b> Belgique, Paraguay et Bosnie ont des milieux agressifs — le risque de suspension est réel.</div>
+    </div>
+
+  </div><!-- /.main -->
+</div><!-- /.db -->
+
+<script>
+// ── Navigation ──
+function nav(id, el) {
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('pane-' + id).classList.add('active');
+  el.classList.add('active');
+}
+
+// ── Match data ──
+const matches = [
+  {t1:'🇲🇽 Mexique',c1:'Aguirre',t2:'🇿🇦 Afrique du Sud',c2:'Broos',s:'4–1',st:'FT',g:'Groupe A',md:'J1',d:'12 juin',g1:'Martín 22\', Lozano 41\', Giménez 67\', Álvarez 88\'',g2:'Dolly 55\'',y2:'Tau 38\'',r2:'Hlanti 71\''},
+  {t1:'🇨🇦 Canada',c1:'Marsch',t2:'🇧🇦 Bosnie-Herzég.',c2:'Barbarez',s:'1–1',st:'FT',g:'Groupe B',md:'J1',d:'12 juin',g1:'David 33\'',g2:'Džeko 60\'',y2:'Pjanić 44\' 80\''},
+  {t1:'🇧🇷 Brésil',c1:'Ancelotti',t2:'🇲🇦 Maroc',c2:'Regragui',s:'1–1',st:'FT',g:'Groupe C',md:'J1',d:'13 juin',g1:'Endrick 29\'',g2:'Ziyech 78\'',y2:'Amrabat 55\''},
+  {t1:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Écosse',c1:'Clarke',t2:'🇭🇹 Haïti',c2:'Collat',s:'1–0',st:'FT',g:'Groupe C',md:'J1',d:'13 juin',g1:'Adams 14\'',g2:'',r2:'Dorléus 58\''},
+  {t1:'🇺🇸 États-Unis',c1:'Pochettino',t2:'🇵🇾 Paraguay',c2:'Alfaro',s:'4–1',st:'FT',g:'Groupe D',md:'J1',d:'14 juin',g1:'Balogun 12\', Pulisic 38\', Weah 55\', Adams 81\'',g2:'Sanabria 70\'',y2:'Gómez 45\' 78\'',r2:'Bogado 88\''},
+  {t1:'🇩🇪 Allemagne',c1:'Nagelsmann',t2:'🇨🇼 Curaçao',c2:'Kluivert',s:'7–1',st:'FT',g:'Groupe E',md:'J1',d:'14 juin',g1:'Undav 5\' 23\' 66\', Havertz 41\', Musiala 58\', Wirtz 73\', Kimmich 87\'',g2:'Room 44\' (csc)'},
+  {t1:'🇨🇮 Côte d\'Ivoire',c1:'Faé',t2:'🇪🇨 Équateur',c2:'Félix Sánchez',s:'1–0',st:'FT',g:'Groupe E',md:'J1',d:'14 juin',g1:'Haller 22\'',y2:'Plata 55\''},
+  {t1:'🇳🇱 Pays-Bas',c1:'Koeman',t2:'🇯🇵 Japon',c2:'Moriyasu',s:'2–2',st:'FT',g:'Groupe F',md:'J1',d:'14 juin',g1:'Gakpo 11\', Van Dijk 44\'',g2:'Kubo 67\', Minamino 89\''},
+  {t1:'🇸🇪 Suède',c1:'Tomasson',t2:'🇹🇳 Tunisie',c2:'Kadri',s:'5–1',st:'FT',g:'Groupe F',md:'J1',d:'14 juin',g1:'Isak 8\' 34\' 61\', Forsberg 44\', Ibrahimović Jr 78\'',g2:'Msakni 55\''},
+  {t1:'🇧🇪 Belgique',c1:'Tedesco',t2:'🇮🇷 Iran',c2:'Ghalenoei',s:'2–2',st:'FT',g:'Groupe G',md:'J1',d:'15 juin',g1:'De Bruyne 22\', Lukaku 70\'',g2:'Azmoun 45\', Taremi 88\'',r2:'Hosseini 79\''},
+  {t1:'🇫🇷 France',c1:'Deschamps',t2:'🇸🇳 Sénégal',c2:'Cissé',s:'3–1',st:'FT',g:'Groupe I',md:'J1',d:'15 juin',g1:'Mbappé 7\' 33\', Griezmann 66\'',g2:'Sarr 55\'',y2:'Koulibaly 38\''},
+  {t1:'🇳🇴 Norvège',c1:'Solbakken',t2:'🇮🇶 Irak',c2:'Casas',s:'4–1',st:'FT',g:'Groupe I',md:'J1',d:'15 juin',g1:'Haaland 19\' 44\', Ødegaard 58\', Sørloth 80\'',g2:'Mohanad 75\''},
+  {t1:'🇨🇭 Suisse',c1:'Yakin',t2:'🇧🇦 Bosnie-Herzég.',c2:'Barbarez',s:'4–1',st:'FT',g:'Groupe B',md:'J2',d:'18 juin',g1:'Shaqiri 10\', Embolo 34\' 67\', Vargas 80\'',g2:'Džeko 55\''},
+  {t1:'🇨🇦 Canada',c1:'Marsch',t2:'🇶🇦 Qatar',c2:'López',s:'6–0',st:'FT',g:'Groupe B',md:'J2',d:'18 juin',g1:'David 12\' 28\' 44\', Buchanan 55\', Larin 70\', Davies 82\'',g2:'',y2:'Al Haydos 30\'',r2:'Al Rawi 60\''},
+  {t1:'🇧🇷 Brésil',c1:'Ancelotti',t2:'🇭🇹 Haïti',c2:'Collat',s:'3–0',st:'FT',g:'Groupe C',md:'J2',d:'19 juin',g1:'Vinicius 14\', Endrick 50\', Rayan 77\'',y2:'Désir 22\'',r2:'Jean-Baptiste 55\''},
+  {t1:'🇺🇸 États-Unis',c1:'Pochettino',t2:'🇦🇺 Australie',c2:'Popovic',s:'2–0',st:'FT',g:'Groupe D',md:'J2',d:'19 juin',g1:'Balogun 30\', McKennie 67\'',y2:'Leckie 44\''},
+  {t1:'🇩🇪 Allemagne',c1:'Nagelsmann',t2:'🇨🇮 Côte d\'Ivoire',c2:'Faé',s:'2–1',st:'FT',g:'Groupe E',md:'J2',d:'20 juin',g1:'Undav 33\', Wirtz 78\'',g2:'Haller 55\'',r2:'Sangare 70\''},
+  {t1:'🇳🇱 Pays-Bas',c1:'Koeman',t2:'🇸🇪 Suède',c2:'Tomasson',s:'5–1',st:'FT',g:'Groupe F',md:'J2',d:'20 juin',g1:'Gakpo 8\' 22\', Depay 40\', Van Dijk 55\', Frimpong 88\'',g2:'Isak 60\''},
+  {t1:'🇯🇵 Japon',c1:'Moriyasu',t2:'🇹🇳 Tunisie',c2:'Kadri',s:'4–0',st:'FT',g:'Groupe F',md:'J2',d:'20 juin',g1:'Kubo 11\' 44\', Doan 60\', Minamino 77\'',r2:'Ben Amor 40\''},
+  {t1:'🇦🇷 Argentine',c1:'Scaloni',t2:'🇦🇹 Autriche',c2:'Rangnick',s:'2–0',st:'FT',g:'Groupe H',md:'J3',d:'22 juin',g1:'Messi 34\' 67\' (17e &amp; 18e buts en CM — record absolu)',g2:'',y2:'Sabitzer 44\', Alaba 77\''},
+  {t1:'🇫🇷 France',c1:'Deschamps',t2:'🇮🇶 Irak',c2:'Casas',s:'1–0',st:'LIVE',g:'Groupe I',md:'J3',d:'22 juin',g1:'Mbappé 44\'',y2:'Al-Hamadi 38\''},
+];
+
+function filterMatches() {
+  const search = document.getElementById('match-search').value.toLowerCase();
+  const group  = document.getElementById('match-group').value;
+  const md     = document.getElementById('match-day').value;
+  const filtered = matches.filter(m => {
+    const tm = !search || m.t1.toLowerCase().includes(search) || m.t2.toLowerCase().includes(search);
+    const gm = !group  || m.g === group;
+    const dm = !md     || m.md === md;
+    return tm && gm && dm;
+  });
+  renderMatches(filtered);
+}
+
+function renderMatches(list) {
+  const el = document.getElementById('match-list');
+  if (!list.length) { el.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text-secondary)">Aucun match trouvé</div>'; return; }
+  let html = '', lastDay = '';
+  list.forEach(m => {
+    if (m.d !== lastDay) { html += `<div class="divider">${m.d} · ${m.md}</div>`; lastDay = m.d; }
+    const st = m.st === 'FT' ? '<span class="badge b-ft">Terminé</span>' : '<span class="badge b-live">EN DIRECT</span>';
+    const y1 = m.y1 ? ` <span class="yc"></span>${m.y1}` : '';
+    const y2 = m.y2 ? ` <span class="yc"></span>${m.y2}` : '';
+    const r1 = m.r1 ? ` <span class="rc"></span>${m.r1}` : '';
+    const r2 = m.r2 ? ` <span class="rc"></span>${m.r2}` : '';
+    html += `<div class="mcard">
+      <div class="mcard-top">
+        <div class="team-l"><div class="tname">${m.t1}</div><div class="coach">${m.c1||''}</div></div>
+        <div style="text-align:center"><div class="scorebox">${m.s}</div><div style="margin-top:3px">${st}</div><div style="font-size:10px;color:var(--text-tertiary);margin-top:2px">${m.g}</div></div>
+        <div class="team-r"><div class="tname">${m.t2}</div><div class="coach">${m.c2||''}</div></div>
+      </div>
+      <div class="mcard-btm">
+        <div>${m.g1 ? '⚽ '+m.g1 : '—'}${y1}${r1}</div>
+        <div>${m.g2 ? '⚽ '+m.g2 : '—'}${y2}${r2}</div>
+      </div>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+renderMatches(matches);
+
+// ── Standings ──
+const groups = {
+  'A': [['🇲🇽 Mexique',2,2,0,0,8,2,6,true],['🇰🇷 Corée du Sud',2,1,0,1,2,2,3,false],['🇨🇿 Tchéquie',2,0,1,1,1,2,1,false],['🇿🇦 Afrique du Sud',2,0,1,1,1,3,1,false]],
+  'B': [['🇨🇦 Canada',2,1,1,0,7,1,4,true],['🇨🇭 Suisse',2,1,1,0,4,1,4,true],['🇧🇦 Bosnie',2,0,1,1,2,5,1,false],['🇶🇦 Qatar',2,0,1,1,0,6,1,false]],
+  'C': [['🇧🇷 Brésil',2,1,1,0,4,1,4,true],['🇲🇦 Maroc',2,1,1,0,2,1,4,true],['🏴󠁧󠁢󠁳󠁣󠁴󠁿 Écosse',2,1,0,1,1,1,3,false],['🇭🇹 Haïti',2,0,0,2,0,4,0,false]],
+  'D': [['🇺🇸 États-Unis',2,2,0,0,6,1,6,true],['🇵🇾 Paraguay',2,1,0,1,2,2,3,false],['🇹🇷 Türkiye',2,0,1,1,0,2,1,false],['🇦🇺 Australie',2,0,1,1,0,3,1,false]],
+  'E': [['🇩🇪 Allemagne',2,2,0,0,9,2,6,true],['🇨🇼 Curaçao',2,0,2,0,1,6,2,false],['🇨🇮 Côte d\'Ivoire',2,0,1,1,1,2,1,false],['🇪🇨 Équateur',2,0,1,1,0,1,1,false]],
+  'F': [['🇳🇱 Pays-Bas',2,1,1,0,7,3,4,true],['🇯🇵 Japon',2,1,1,0,6,2,4,true],['🇸🇪 Suède',2,1,0,1,6,6,3,false],['🇹🇳 Tunisie',2,0,0,2,1,9,0,false]],
+  'G': [['🇪🇬 Égypte',1,1,0,0,2,0,3,false],['🇧🇪 Belgique',1,0,1,0,2,2,1,false],['🇮🇷 Iran',1,0,1,0,2,2,1,false],['🇳🇿 Nouvelle-Zélande',1,0,0,1,0,2,0,false]],
+  'H': [['🇦🇷 Argentine',1,1,0,0,2,0,3,true],['🇪🇸 Espagne',1,1,0,0,2,0,3,false],['🇦🇹 Autriche',1,0,0,1,0,2,0,false],['🇸🇦 Arabie Saoudite',1,0,0,1,0,2,0,false]],
+  'I': [['🇫🇷 France',2,2,0,0,4,1,6,true],['🇸🇳 Sénégal',2,1,0,1,2,3,3,false],['🇳🇴 Norvège',1,1,0,0,4,1,3,true],['🇮🇶 Irak',2,0,0,2,1,6,0,false]],
+};
+let activeGroup = 'A';
+
+function renderGroupTabs() {
+  document.getElementById('group-tabs').innerHTML = Object.keys(groups).map(g =>
+    `<div class="gtab${g===activeGroup?' active':''}" onclick="selectGroup('${g}',this)">Groupe ${g}</div>`
+  ).join('');
+}
+function selectGroup(g, el) {
+  activeGroup = g;
+  document.querySelectorAll('.gtab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderStandings();
+}
+function renderStandings() {
+  const rows = groups[activeGroup];
+  let html = `<div class="card"><div class="card-body" style="padding:0"><table>
+    <tr><th>Équipe</th><th>J</th><th>V</th><th>N</th><th>D</th><th>BP</th><th>BC</th><th>DB</th><th>Pts</th></tr>`;
+  rows.forEach(r => {
+    const gd = r[5] - r[6];
+    html += `<tr${r[8]?' class="q"':''}><td style="font-weight:500">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${gd>=0?'+'+gd:gd}</td><td><b>${r[7]}</b></td></tr>`;
+  });
+  html += `</table></div><div style="padding:.5rem 1rem;font-size:11px;color:var(--text-secondary);border-top:0.5px solid var(--border)">
+    <span style="display:inline-block;width:10px;height:10px;background:rgba(29,158,117,.15);border:0.5px solid #1D9E75;border-radius:2px;margin-right:4px"></span>Qualifié pour les 1/32 de finale
+  </div></div>`;
+  document.getElementById('standings-table').innerHTML = html;
+}
+renderGroupTabs();
+renderStandings();
+
+// ── Scorers ──
+const scorers = [
+  {n:'Lionel Messi',f:'🇦🇷',p:'Argentine',g:5,a:2,note:'Record CM absolu (18 buts en carrière)'},
+  {n:'Denis Undav',f:'🇩🇪',p:'Allemagne',g:4,a:1,note:''},
+  {n:'Jonathan David',f:'🇨🇦',p:'Canada',g:3,a:0,note:'Triplé contre le Qatar'},
+  {n:'Cody Gakpo',f:'🇳🇱',p:'Pays-Bas',g:3,a:1,note:''},
+  {n:'Takefusa Kubo',f:'🇯🇵',p:'Japon',g:3,a:1,note:''},
+  {n:'Kylian Mbappé',f:'🇫🇷',p:'France',g:3,a:0,note:'Encore en jeu'},
+  {n:'Alexander Isak',f:'🇸🇪',p:'Suède',g:3,a:0,note:''},
+  {n:'Vinicius Jr.',f:'🇧🇷',p:'Brésil',g:2,a:1,note:''},
+  {n:'Folarin Balogun',f:'🇺🇸',p:'États-Unis',g:2,a:0,note:''},
+  {n:'Erling Haaland',f:'🇳🇴',p:'Norvège',g:2,a:0,note:''},
+  {n:'Kai Havertz',f:'🇩🇪',p:'Allemagne',g:2,a:0,note:''},
+  {n:'Florian Wirtz',f:'🇩🇪',p:'Allemagne',g:2,a:2,note:''},
+  {n:'Endrick',f:'🇧🇷',p:'Brésil',g:2,a:0,note:''},
+  {n:'Mohamed Salah',f:'🇪🇬',p:'Égypte',g:2,a:0,note:''},
+];
+function renderScorers() {
+  let html = `<div class="card"><div class="card-body" style="padding:0"><table>
+    <tr><th>#</th><th>Joueur</th><th>Pays</th><th>Buts</th><th>PD</th><th>Note</th></tr>`;
+  scorers.forEach((s,i) => {
+    html += `<tr${i===0?' style="background:var(--bg-info)"':''}>
+      <td style="color:var(--text-secondary)">${i+1}</td>
+      <td style="font-weight:${i<3?500:400}">${i===0?'🐐 ':''}${s.n}</td>
+      <td>${s.f} ${s.p}</td>
+      <td style="font-weight:500;font-size:15px">${s.g}</td>
+      <td style="color:var(--text-secondary)">${s.a}</td>
+      <td style="font-size:11px;color:var(--text-tertiary)">${s.note}</td>
+    </tr>`;
+  });
+  html += '</table></div></div>';
+  document.getElementById('scorers-list').innerHTML = html;
+}
+renderScorers();
+
+// ── Mini scorers (aperçu) ──
+const colors = ['#185FA5','#534AB7','#0F6E56','#993C1D','#854F0B'];
+function renderMiniScorers() {
+  const top5 = scorers.slice(0,5);
+  document.getElementById('mini-scorers').innerHTML = top5.map((s,i) => `
+    <div class="pred-row">
+      <div class="pred-lbl"><span>${s.f} ${s.n}</span><span style="font-weight:500">${s.g} ⚽</span></div>
+      <div class="mini-bar-wrap"><div class="mini-bar-fill" style="width:${(s.g/5)*100}%;background:${colors[i]}"></div></div>
+    </div>`).join('');
+}
+renderMiniScorers();
+
+// ── Predictions ──
+const preds = {
+  finale: [{t:'🇫🇷 France',p:28},{t:'🇩🇪 Allemagne',p:22},{t:'🇦🇷 Argentine',p:20},{t:'🇧🇷 Brésil',p:18},{t:'🇳🇱 Pays-Bas',p:12},{t:'🇳🇴 Norvège',p:10},{t:'🇯🇵 Japon',p:8},{t:'🇺🇸 États-Unis',p:8},{t:'🇪🇸 Espagne',p:7},{t:'🇲🇽 Mexique',p:5}],
+  gagner: [{t:'🇫🇷 France',p:18},{t:'🇩🇪 Allemagne',p:16},{t:'🇦🇷 Argentine',p:14},{t:'🇧🇷 Brésil',p:13},{t:'🇳🇱 Pays-Bas',p:9},{t:'🇳🇴 Norvège',p:7},{t:'🇯🇵 Japon',p:5},{t:'🇺🇸 États-Unis',p:5},{t:'🇪🇸 Espagne',p:4},{t:'🇲🇽 Mexique',p:3}],
+  qf:     [{t:'🇫🇷 France',p:72},{t:'🇩🇪 Allemagne',p:70},{t:'🇦🇷 Argentine',p:68},{t:'🇧🇷 Brésil',p:65},{t:'🇳🇱 Pays-Bas',p:58},{t:'🇳🇴 Norvège',p:52},{t:'🇯🇵 Japon',p:50},{t:'🇺🇸 États-Unis',p:50},{t:'🇪🇸 Espagne',p:48},{t:'🇲🇽 Mexique',p:40}],
+};
+const barColors = ['#185FA5','#534AB7','#0F6E56','#993C1D','#854F0B','#639922','#A32D2D','#185FA5','#993556','#3B6D11'];
+let curPred = 'finale';
+
+function setPred(type, btn) {
+  curPred = type;
+  document.querySelectorAll('#pred-seg .seg-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPred();
+}
+function renderPred() {
+  const data = preds[curPred];
+  const max = Math.max(...data.map(d => d.p));
+  document.getElementById('pred-bars').innerHTML = data.map((d,i) => `
+    <div class="pred-row">
+      <div class="pred-lbl"><span>${d.t}</span><span style="font-weight:500">${d.p}%</span></div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${(d.p/max)*100}%;background:${barColors[i]}"></div></div>
+    </div>`).join('');
+}
+renderPred();
+</script>
+</body>
+</html>
