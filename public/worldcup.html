@@ -722,22 +722,28 @@ const EN2FR = {
 function teamKey(name){ const n = norm(name); return EN2FR[n] || n; }
 function keyHit(k,t){ return k===t || (k.length>=4 && t.length>=4 && (k.startsWith(t)||t.startsWith(k))); }
 
-// Map of snapshot team displays (flag + French name) for rendering ESPN-only lists.
-const TEAMDISP = (() => {
-  const m = {};
-  const add = s => { const k = norm(s); if (k && !m[k]) m[k] = s; };
-  matches.forEach(x => { add(x.t1); add(x.t2); });
-  Object.values(groups).forEach(a => a.forEach(r => add(r[0])));
-  return m;
-})();
-function dispTeam(name){
-  const k = teamKey(name);
-  for (const key in TEAMDISP){ if (keyHit(k, key)) return TEAMDISP[key]; }
-  return name;   // fallback: ESPN English name (no flag)
-}
+// Authoritative flag + French name for all 48 teams, keyed by norm(ESPN name).
+const TEAMS = {
+  mexico:'🇲🇽 Mexique', czechia:'🇨🇿 Tchéquie', czechrepublic:'🇨🇿 Tchéquie',
+  southkorea:'🇰🇷 Corée du Sud', southafrica:'🇿🇦 Afrique du Sud',
+  canada:'🇨🇦 Canada', bosniaherzegovina:'🇧🇦 Bosnie-Herz.', bosnia:'🇧🇦 Bosnie-Herz.',
+  switzerland:'🇨🇭 Suisse', qatar:'🇶🇦 Qatar',
+  brazil:'🇧🇷 Brésil', scotland:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Écosse', haiti:'🇭🇹 Haïti', morocco:'🇲🇦 Maroc',
+  paraguay:'🇵🇾 Paraguay', turkiye:'🇹🇷 Türkiye', turkey:'🇹🇷 Türkiye', australia:'🇦🇺 Australie',
+  unitedstates:'🇺🇸 États-Unis', usa:'🇺🇸 États-Unis',
+  ecuador:'🇪🇨 Équateur', germany:'🇩🇪 Allemagne', ivorycoast:"🇨🇮 Côte d'Ivoire", curacao:'🇨🇼 Curaçao',
+  netherlands:'🇳🇱 Pays-Bas', sweden:'🇸🇪 Suède', japan:'🇯🇵 Japon', tunisia:'🇹🇳 Tunisie',
+  belgium:'🇧🇪 Belgique', iran:'🇮🇷 Iran', egypt:'🇪🇬 Égypte', newzealand:'🇳🇿 Nouvelle-Zélande',
+  spain:'🇪🇸 Espagne', uruguay:'🇺🇾 Uruguay', saudiarabia:'🇸🇦 Arabie Saoudite', capeverde:'🇨🇻 Cap-Vert',
+  norway:'🇳🇴 Norvège', france:'🇫🇷 France', senegal:'🇸🇳 Sénégal', iraq:'🇮🇶 Irak',
+  argentina:'🇦🇷 Argentine', austria:'🇦🇹 Autriche', algeria:'🇩🇿 Algérie', jordan:'🇯🇴 Jordanie',
+  colombia:'🇨🇴 Colombie', portugal:'🇵🇹 Portugal', uzbekistan:'🇺🇿 Ouzbékistan', congodr:'🇨🇩 RD Congo',
+  england:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre', croatia:'🇭🇷 Croatie', panama:'🇵🇦 Panama', ghana:'🇬🇭 Ghana'
+};
+function dispTeam(name){ return TEAMS[norm(name)] || name; }
 function splitDisp(d){
-  const mm = String(d).match(/^(\P{L}+)\s*(.*)$/u);
-  if (mm && /\p{Regional_Indicator}/u.test(mm[1])) return { flag: mm[1].trim(), name: mm[2] };
+  const i = String(d).indexOf(' ');
+  if (i > 0){ const flag = d.slice(0, i); if (!/\p{L}/u.test(flag)) return { flag, name: d.slice(i + 1) }; }
   return { flag: '', name: d };
 }
 
@@ -870,7 +876,8 @@ function applyProgramme(events){
   const el=document.getElementById('programme-list');
   if (!el || !events || !events.length) return;
   const up = events
-    .filter(e => e.status==='LIVE' || e.status==='NS')
+    // only real matchups — skip ESPN's knockout placeholders ("Group A 2nd Place", "Round of 32 1 Winner")
+    .filter(e => (e.status==='LIVE' || e.status==='NS') && TEAMS[norm(e.home.name)] && TEAMS[norm(e.away.name)])
     .sort((a,b) => (a.status==='LIVE'?0:1)-(b.status==='LIVE'?0:1) || String(a.iso).localeCompare(String(b.iso)))
     .slice(0,18);
   if (!up.length){
