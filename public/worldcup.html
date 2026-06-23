@@ -792,20 +792,43 @@ function renderLiveCard(m, e){
 }
 
 function applyLive(events){
-  if (!events || !events.length) return;     // nothing live → keep the snapshot
+  if (!events || !events.length) return;     // nothing returned → keep the snapshot
   let liveM=null, liveE=null;
   events.forEach(e => {
-    if (!e || (e.status!=='LIVE' && e.status!=='FT')) return;
+    if (!e) return;
     const m = matches.find(mm => sameMatch(mm,e));
-    if (m){
-      if (e.status==='LIVE' && e.hs!=null && e.as!=null){ m.s=`${e.hs}–${e.as}`; m.st='LIVE'; }
-      // a match that was live and is now finished gets its final score
-      else if (e.status==='FT' && m.st==='LIVE' && e.hs!=null && e.as!=null){ m.s=`${e.hs}–${e.as}`; m.st='FT'; }
+    // real result wins for any match the feed covers (live or finished)
+    if (m && e.hs!=null && e.as!=null && (e.status==='LIVE' || e.status==='FT')){
+      const real = `${e.hs}–${e.as}`;
+      // the feed gives scores but not scorers/cards — if the real score differs
+      // from the snapshot, drop the now-stale goal/card annotations.
+      if (m.s !== real){ m.g1=''; m.g2=''; m.y1=''; m.y2=''; m.r1=''; m.r2=''; }
+      m.s = real;
+      m.st = e.status==='LIVE' ? 'LIVE' : 'FT';
     }
     if (e.status==='LIVE' && !liveE){ liveE=e; liveM=m; }
   });
   renderLiveCard(liveM, liveE);
   filterMatches();   // re-render the matches pane with any updated scores
+}
+
+// Update group standings from the live table for whichever teams it returns.
+function applyTable(table){
+  if (!table || !table.length) return;
+  const touched = new Set();
+  table.forEach(row => {
+    const arr = groups[row.group]; if (!arr) return;
+    const tk = teamKey(row.team);
+    const r = arr.find(x => keyHit(tk, norm(x[0])));
+    if (r){ r[1]=row.played; r[2]=row.win; r[3]=row.draw; r[4]=row.loss; r[5]=row.gf; r[6]=row.ga; r[7]=row.points; touched.add(row.group); }
+  });
+  // recompute the top-2 "qualified" highlight for any group we changed
+  touched.forEach(g => {
+    const arr = groups[g];
+    const order = [...arr].sort((a,b) => b[7]-a[7] || (b[5]-b[6])-(a[5]-a[6]) || b[5]-a[5]);
+    arr.forEach(r => r[8] = order.indexOf(r) < 2);
+  });
+  renderStandings();
 }
 
 let refreshing=false;
@@ -820,6 +843,7 @@ async function refreshLive(manual){
     const r=await fetch('/api/worldcup/live',{cache:'no-store'});
     const data=await r.json();
     applyLive(data.events||[]);
+    applyTable(data.table||[]);
     const t=new Date(data.updated||Date.now());
     document.getElementById('last-update').textContent =
       t.toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
