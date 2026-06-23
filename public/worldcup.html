@@ -337,10 +337,10 @@
     <div id="pane-apercu" class="pane active">
       <div class="pane-title">Aperçu général</div>
       <div class="kpi-row">
-        <div class="kpi"><div class="kpi-val">81</div><div class="kpi-lbl">Buts marqués</div><div class="kpi-sub">2,25 par match</div></div>
-        <div class="kpi"><div class="kpi-val">36</div><div class="kpi-lbl">Matchs joués</div><div class="kpi-sub">sur 104 au total</div></div>
-        <div class="kpi"><div class="kpi-val" style="color:#E24B4A">14</div><div class="kpi-lbl">Cartons rouges</div><div class="kpi-sub">Rythme record</div></div>
-        <div class="kpi"><div class="kpi-val">18</div><div class="kpi-lbl">Buts Messi (CM)</div><div class="kpi-sub">Record absolu 🐐</div></div>
+        <div class="kpi"><div class="kpi-val" id="kpi-goals">81</div><div class="kpi-lbl">Buts marqués</div><div class="kpi-sub" id="kpi-goals-sub">2,25 par match</div></div>
+        <div class="kpi"><div class="kpi-val" id="kpi-matches">36</div><div class="kpi-lbl">Matchs joués</div><div class="kpi-sub">phase de groupes</div></div>
+        <div class="kpi"><div class="kpi-val" id="kpi-reds" style="color:var(--brand)">14</div><div class="kpi-lbl">Cartons rouges</div><div class="kpi-sub">discipline</div></div>
+        <div class="kpi"><div class="kpi-val" id="kpi-top">18</div><div class="kpi-lbl">Meilleur buteur</div><div class="kpi-sub" id="kpi-top-sub">🐐</div></div>
       </div>
 
       <div class="two-col">
@@ -361,9 +361,9 @@
             <div class="card-body" style="display:flex;align-items:center;gap:10px">
               <div style="width:40px;height:40px;border-radius:50%;background:var(--bg-info);display:flex;align-items:center;justify-content:center;font-size:20px">🐐</div>
               <div>
-                <div style="font-weight:500">Lionel Messi</div>
-                <div style="font-size:11px;color:var(--text-secondary)">🇦🇷 Argentine · 5 buts · 2 passes déc.</div>
-                <div style="font-size:11px;color:var(--text-tertiary)">Record CM absolu : 18 buts en carrière</div>
+                <div style="font-weight:500" id="top-name">Lionel Messi</div>
+                <div style="font-size:11px;color:var(--text-secondary)" id="top-meta">🇦🇷 Argentine · 5 buts</div>
+                <div style="font-size:11px;color:var(--text-tertiary)">En tête du Soulier d'Or adidas</div>
               </div>
             </div>
           </div>
@@ -434,17 +434,17 @@
     <div id="pane-cartons" class="pane">
       <div class="pane-title">Cartons disciplinaires</div>
       <div class="kpi-row" style="grid-template-columns:1fr 1fr 1fr">
-        <div class="kpi"><div class="kpi-val" style="color:#EF9F27">74</div><div class="kpi-lbl">Cartons jaunes</div></div>
-        <div class="kpi"><div class="kpi-val" style="color:#E24B4A">14</div><div class="kpi-lbl">Cartons rouges</div></div>
-        <div class="kpi"><div class="kpi-val">2,06</div><div class="kpi-lbl">Cartons par match</div></div>
+        <div class="kpi"><div class="kpi-val" id="kc-yellow" style="color:#d6a417">74</div><div class="kpi-lbl">Cartons jaunes</div></div>
+        <div class="kpi"><div class="kpi-val" id="kc-red" style="color:var(--brand)">14</div><div class="kpi-lbl">Cartons rouges</div></div>
+        <div class="kpi"><div class="kpi-val" id="kc-permatch">2,06</div><div class="kpi-lbl">Cartons par match</div></div>
       </div>
       <div class="info-banner">
-        En 2026, autant de cartons rouges en 27 matchs que lors des deux dernières Coupes du Monde combinées. Les arbitres appliquent des directives plus strictes.
+        Discipline en direct (données ESPN). En 2026, les arbitres appliquent des directives plus strictes sur les tacles dangereux et les contestations.
       </div>
       <div class="two-col">
         <div class="card">
           <div class="card-head"><span class="rc"></span> Cartons rouges</div>
-          <div class="card-body" style="padding:0">
+          <div class="card-body" id="cartons-reds" style="padding:0">
             <table>
               <tr><th>Joueur</th><th>Pays</th><th>Contre</th><th>Min</th></tr>
               <tr><td>Hlanti S.</td><td>🇿🇦 AFS</td><td>MEX</td><td>71'</td></tr>
@@ -460,7 +460,7 @@
         </div>
         <div class="card">
           <div class="card-head"><span class="yc"></span> Plus de cartons jaunes</div>
-          <div class="card-body" style="padding:0">
+          <div class="card-body" id="cartons-yellows" style="padding:0">
             <table>
               <tr><th>Joueur</th><th>Pays</th><th>CJ</th></tr>
               <tr><td>Pjanić M.</td><td>🇧🇦 BIH</td><td><b>2</b></td></tr>
@@ -740,10 +740,10 @@ function renderPred() {
 }
 renderPred();
 
-// ── Live refresh (TheSportsDB via the Le Vieillard backend) ──
-// The dashboard auto-refreshes the in-progress match and its score every minute.
-// Standings / scorers / predictions stay as the curated snapshot. If the backend
-// or API is unreachable, the embedded snapshot is kept untouched.
+// ── Live data from ESPN (via the Le Vieillard backend) ──
+// Replaces the snapshot with real scores, scorers, cards and standings across
+// every tab. If the backend/ESPN is unreachable (or the file is opened directly)
+// the embedded snapshot is kept untouched, so it never breaks.
 function norm(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z]/g,''); }
 const EN2FR = {
   iraq:'irak', norway:'norvege', senegal:'senegal', southafrica:'afriquedusud',
@@ -753,66 +753,94 @@ const EN2FR = {
   france:'france', argentina:'argentine', austria:'autriche', ivorycoast:'cotedivoire',
   ecuador:'equateur', tunisia:'tunisie', haiti:'haiti', scotland:'ecosse', paraguay:'paraguay',
   australia:'australie', curacao:'curacao', iran:'iran', egypt:'egypte', qatar:'qatar',
-  bosniaandherzegovina:'bosnie', bosnia:'bosnie', southkorea:'coreedusud',
-  czechrepublic:'tchequie', czechia:'tchequie', turkey:'turkiye', saudiarabia:'arabiesaoudite',
-  newzealand:'nouvellezelande', portugal:'portugal', uzbekistan:'ouzbekistan',
-  jordan:'jordanie', algeria:'algerie', england:'angleterre', ghana:'ghana'
+  bosniaandherzegovina:'bosnie', bosniaherzegovina:'bosnie', bosnia:'bosnie', southkorea:'coreedusud',
+  korearepublic:'coreedusud', czechrepublic:'tchequie', czechia:'tchequie', turkey:'turkiye',
+  turkiye:'turkiye', saudiarabia:'arabiesaoudite', newzealand:'nouvellezelande', portugal:'portugal',
+  uzbekistan:'ouzbekistan', jordan:'jordanie', algeria:'algerie', england:'angleterre', ghana:'ghana'
 };
-function teamKey(apiName){ const n = norm(apiName); return EN2FR[n] || n; }
+function teamKey(name){ const n = norm(name); return EN2FR[n] || n; }
 function keyHit(k,t){ return k===t || (k.length>=4 && t.length>=4 && (k.startsWith(t)||t.startsWith(k))); }
-function sameMatch(m,e){
-  const h=teamKey(e.home), a=teamKey(e.away), t1=norm(m.t1), t2=norm(m.t2);
-  return (keyHit(h,t1)&&keyHit(a,t2)) || (keyHit(h,t2)&&keyHit(a,t1));
+
+// Map of snapshot team displays (flag + French name) for rendering ESPN-only lists.
+const TEAMDISP = (() => {
+  const m = {};
+  const add = s => { const k = norm(s); if (k && !m[k]) m[k] = s; };
+  matches.forEach(x => { add(x.t1); add(x.t2); });
+  Object.values(groups).forEach(a => a.forEach(r => add(r[0])));
+  return m;
+})();
+function dispTeam(name){
+  const k = teamKey(name);
+  for (const key in TEAMDISP){ if (keyHit(k, key)) return TEAMDISP[key]; }
+  return name;   // fallback: ESPN English name (no flag)
 }
-function statusLabel(raw){
-  raw = String(raw||'').toUpperCase().trim();
-  if (raw==='HT') return 'Mi-temps';
-  if (raw==='FT'||raw==='AET'||raw==='PEN') return 'Terminé';
-  if (raw==='NS'||raw==='') return 'À venir';
-  if (/^\d+$/.test(raw)) return raw + "'";
-  return raw;
+function splitDisp(d){
+  const mm = String(d).match(/^(\P{L}+)\s*(.*)$/u);
+  if (mm && /\p{Regional_Indicator}/u.test(mm[1])) return { flag: mm[1].trim(), name: mm[2] };
+  return { flag: '', name: d };
 }
 
-function renderLiveCard(m, e){
+function matchOf(ev){
+  const h=teamKey(ev.home.name), a=teamKey(ev.away.name);
+  return matches.find(m => {
+    const t1=norm(m.t1), t2=norm(m.t2);
+    return (keyHit(h,t1)&&keyHit(a,t2)) || (keyHit(h,t2)&&keyHit(a,t1));
+  });
+}
+function goalsLine(goals){
+  return goals.map(g => g.who ? `${g.who} ${g.min}${g.own?' (csc)':g.pen?' (pen)':''}` : '').filter(Boolean).join(', ');
+}
+function cardsStr(cards, side, type){
+  return cards.filter(c => c.side===side && c.type===type).map(c => `${c.who} ${c.min}`).join(' ');
+}
+function statusFr(ev){
+  if (ev.status==='FT') return 'Terminé';
+  if (ev.status==='NS') return ev.clock || 'À venir';
+  return ev.clock || 'En direct';
+}
+
+function renderLiveCard(ev, isLive){
   const card=document.getElementById('live-card');
   const head=document.getElementById('live-head');
   const body=document.getElementById('live-body');
-  if (!e){ card.style.display='none'; return; }
+  const pulse=card.querySelector('.live-pulse');
+  if (!ev){ card.style.display='none'; return; }
   card.style.display='';
-  head.textContent = 'En direct';
-  const score = (e.hs!=null && e.as!=null) ? `${e.hs}–${e.as}` : 'vs';
-  const left  = m ? `<div class="tname">${m.t1}</div><div class="coach">${m.c1||''}</div>` : `<div class="tname">${e.home}</div>`;
-  const right = m ? `<div class="tname">${m.t2}</div><div class="coach">${m.c2||''}</div>` : `<div class="tname">${e.away}</div>`;
+  if (pulse) pulse.style.display = isLive ? '' : 'none';
+  head.textContent = isLive ? 'En direct' : 'Dernier match';
+  const score = (ev.home.score!=null && ev.away.score!=null) ? `${ev.home.score}–${ev.away.score}` : 'vs';
+  const gl = goalsLine(ev.goals);
   body.innerHTML = `<div style="display:grid;grid-template-columns:1fr 56px 1fr;align-items:center;gap:6px">
-      <div class="team-l">${left}</div>
+      <div class="team-l"><div class="tname">${dispTeam(ev.home.name)}</div></div>
       <div class="scorebox">${score}</div>
-      <div class="team-r">${right}</div>
+      <div class="team-r"><div class="tname">${dispTeam(ev.away.name)}</div></div>
     </div>
-    <div style="margin-top:8px;font-size:11px;color:var(--text-secondary)">${e.venue?('📍 '+e.venue+' &nbsp;|&nbsp; '):''}${statusLabel(e.raw)}</div>`;
+    <div style="margin-top:8px;font-size:11px;color:var(--text-secondary)">${gl?('⚽ '+gl+' &nbsp;|&nbsp; '):''}${statusFr(ev)}</div>`;
 }
 
-function applyLive(events){
-  if (!events || !events.length) return;     // nothing returned → keep the snapshot
-  let liveM=null, liveE=null;
-  events.forEach(e => {
-    if (!e) return;
-    const m = matches.find(mm => sameMatch(mm,e));
-    // real result wins for any match the feed covers (live or finished)
-    if (m && e.hs!=null && e.as!=null && (e.status==='LIVE' || e.status==='FT')){
-      const real = `${e.hs}–${e.as}`;
-      // the feed gives scores but not scorers/cards — if the real score differs
-      // from the snapshot, drop the now-stale goal/card annotations.
-      if (m.s !== real){ m.g1=''; m.g2=''; m.y1=''; m.y2=''; m.r1=''; m.r2=''; }
-      m.s = real;
-      m.st = e.status==='LIVE' ? 'LIVE' : 'FT';
-    }
-    if (e.status==='LIVE' && !liveE){ liveE=e; liveM=m; }
+// Overlay real scores + scorers + cards onto the snapshot match list.
+function applyEvents(events){
+  if (!events || !events.length) return;
+  let liveEv=null, lastFt=null;
+  events.forEach(ev => {
+    if (ev.status==='LIVE' && !liveEv) liveEv=ev;
+    if (ev.status==='FT' && (!lastFt || ev.date > lastFt.date)) lastFt=ev;
+    if ((ev.status!=='FT' && ev.status!=='LIVE') || ev.home.score==null || ev.away.score==null) return;
+    const m = matchOf(ev); if (!m) return;
+    const homeIsT1 = keyHit(teamKey(ev.home.name), norm(m.t1));
+    const hs=ev.home.score, as=ev.away.score;
+    m.s  = homeIsT1 ? `${hs}–${as}` : `${as}–${hs}`;
+    m.st = ev.status==='LIVE' ? 'LIVE' : 'FT';
+    const homeG=goalsLine(ev.goals.filter(g=>g.side==='home')), awayG=goalsLine(ev.goals.filter(g=>g.side==='away'));
+    m.g1 = homeIsT1 ? homeG : awayG;  m.g2 = homeIsT1 ? awayG : homeG;
+    m.y1 = cardsStr(ev.cards, homeIsT1?'home':'away','Y'); m.y2 = cardsStr(ev.cards, homeIsT1?'away':'home','Y');
+    m.r1 = cardsStr(ev.cards, homeIsT1?'home':'away','R'); m.r2 = cardsStr(ev.cards, homeIsT1?'away':'home','R');
   });
-  renderLiveCard(liveM, liveE);
-  filterMatches();   // re-render the matches pane with any updated scores
+  renderLiveCard(liveEv||lastFt, !!liveEv);
+  filterMatches();
 }
 
-// Update group standings from the live table for whichever teams it returns.
+// Update group standings from the live table.
 function applyTable(table){
   if (!table || !table.length) return;
   const touched = new Set();
@@ -822,7 +850,6 @@ function applyTable(table){
     const r = arr.find(x => keyHit(tk, norm(x[0])));
     if (r){ r[1]=row.played; r[2]=row.win; r[3]=row.draw; r[4]=row.loss; r[5]=row.gf; r[6]=row.ga; r[7]=row.points; touched.add(row.group); }
   });
-  // recompute the top-2 "qualified" highlight for any group we changed
   touched.forEach(g => {
     const arr = groups[g];
     const order = [...arr].sort((a,b) => b[7]-a[7] || (b[5]-b[6])-(a[5]-a[6]) || b[5]-a[5]);
@@ -831,24 +858,72 @@ function applyTable(table){
   renderStandings();
 }
 
+// Rebuild the scorers list (Buteurs + Aperçu) from real data.
+function applyScorers(list){
+  if (!list || !list.length) return;
+  scorers.length = 0;
+  list.slice(0,20).forEach(s => { const {flag,name}=splitDisp(dispTeam(s.team)); scorers.push({n:s.who, f:flag, p:name, g:s.goals, a:0, note:''}); });
+  renderScorers(); renderMiniScorers();
+  const top = scorers[0];
+  if (top){
+    const set=(id,v)=>{const e=document.getElementById(id); if(e)e.textContent=v;};
+    set('top-name', top.n); set('top-meta', `${top.f} ${top.p} · ${top.g} buts`);
+    set('kpi-top', top.g); set('kpi-top-sub', top.n);
+  }
+}
+
+// Rebuild the discipline tables from real cards.
+function applyCards(reds, yellows){
+  if (reds && reds.length){
+    const el=document.getElementById('cartons-reds');
+    if (el){
+      let h='<table><tr><th>Joueur</th><th>Pays</th><th>Contre</th><th>Min</th></tr>';
+      reds.slice(0,14).forEach(r=>{ const p=splitDisp(dispTeam(r.team)), v=splitDisp(dispTeam(r.vs)); h+=`<tr><td>${r.who||'—'}</td><td>${p.flag} ${p.name}</td><td>${v.flag||v.name}</td><td>${r.min||''}</td></tr>`; });
+      el.innerHTML=h+'</table>';
+    }
+  }
+  if (yellows && yellows.length){
+    const el=document.getElementById('cartons-yellows');
+    if (el){
+      let h='<table><tr><th>Joueur</th><th>Pays</th><th>CJ</th></tr>';
+      yellows.slice(0,12).forEach(y=>{ const p=splitDisp(dispTeam(y.team)); h+=`<tr><td>${y.who||'—'}</td><td>${p.flag} ${p.name}</td><td><b>${y.count}</b></td></tr>`; });
+      el.innerHTML=h+'</table>';
+    }
+  }
+}
+
+function applyKpis(k){
+  if (!k) return;
+  const set=(id,v)=>{const e=document.getElementById(id); if(e)e.textContent=v;};
+  set('kpi-goals', k.goals);
+  set('kpi-goals-sub', String(k.goalsPerMatch).replace('.',',')+' par match');
+  set('kpi-matches', k.played);
+  set('kpi-reds', k.reds);
+  set('kc-yellow', k.yellows);
+  set('kc-red', k.reds);
+  set('kc-permatch', String(k.cardsPerMatch).replace('.',','));
+}
+
 let refreshing=false;
 async function refreshLive(manual){
   if (refreshing) return; refreshing=true;
   const lbl=document.getElementById('refresh-label');
   const btn=document.getElementById('refresh-btn');
-  const prev=lbl?lbl.textContent:'';
   if (manual && lbl) lbl.textContent='Actualisation…';
   if (btn) btn.disabled=true;
   try{
     const r=await fetch('/api/worldcup/live',{cache:'no-store'});
     const data=await r.json();
-    applyLive(data.events||[]);
+    applyEvents(data.events||[]);
     applyTable(data.table||[]);
+    applyScorers(data.scorers||[]);
+    applyCards(data.reds||[], data.yellows||[]);
+    applyKpis(data.kpis);
     const t=new Date(data.updated||Date.now());
     document.getElementById('last-update').textContent =
       t.toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
   }catch(e){ /* offline / file opened directly → keep snapshot */ }
-  finally{ if(lbl) lbl.textContent=manual?(prev||'Actualiser les données'):lbl.textContent; if(btn) btn.disabled=false; refreshing=false; }
+  finally{ if(lbl) lbl.textContent='Actualiser les données'; if(btn) btn.disabled=false; refreshing=false; }
 }
 
 refreshLive(false);
