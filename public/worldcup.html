@@ -480,47 +480,8 @@
     <!-- PROGRAMME -->
     <div id="pane-programme" class="pane">
       <div class="pane-title">Programme à venir</div>
-      <div class="divider">22 juin — ce soir</div>
-      <div class="mcard">
-        <div class="mcard-top">
-          <div class="team-l"><div class="tname">🇫🇷 France</div><div class="coach">Deschamps</div></div>
-          <div style="text-align:center"><div class="scorebox" style="font-size:13px">vs</div><div style="margin-top:3px"><span class="badge b-live">EN COURS</span></div></div>
-          <div class="team-r"><div class="tname">🇮🇶 Irak</div><div class="coach">Casas</div></div>
-        </div>
-        <div class="mcard-btm"><span>Groupe I · Philadelphie</span><span>2e mi-temps en cours</span></div>
-      </div>
-      <div class="mcard">
-        <div class="mcard-top">
-          <div class="team-l"><div class="tname">🇳🇴 Norvège</div><div class="coach">Solbakken</div></div>
-          <div style="text-align:center"><div class="scorebox" style="font-size:13px">vs</div><div style="margin-top:3px"><span class="badge b-up">21h00 ET</span></div></div>
-          <div class="team-r"><div class="tname">🇸🇳 Sénégal</div><div class="coach">Cissé</div></div>
-        </div>
-        <div class="mcard-btm"><span>Groupe I · Kansas City</span><span>Haaland vs Sarr</span></div>
-      </div>
-      <div class="mcard">
-        <div class="mcard-top">
-          <div class="team-l"><div class="tname">🇯🇴 Jordanie</div><div class="coach">A. Katbi</div></div>
-          <div style="text-align:center"><div class="scorebox" style="font-size:13px">vs</div><div style="margin-top:3px"><span class="badge b-up">23h00 ET</span></div></div>
-          <div class="team-r"><div class="tname">🇩🇿 Algérie</div><div class="coach">Petkovic</div></div>
-        </div>
-        <div class="mcard-btm"><span>Groupe J · Toronto</span><span>—</span></div>
-      </div>
-      <div class="divider">23 juin</div>
-      <div class="mcard">
-        <div class="mcard-top">
-          <div class="team-l"><div class="tname">🇺🇿 Ouzbékistan</div><div class="coach">Shomurodov</div></div>
-          <div style="text-align:center"><div class="scorebox" style="font-size:13px">vs</div><div style="margin-top:3px"><span class="badge b-up">23 juin</span></div></div>
-          <div class="team-r"><div class="tname">🇵🇹 Portugal</div><div class="coach">R. Martínez</div></div>
-        </div>
-        <div class="mcard-btm"><span>Groupe K · Los Angeles</span><span>Les adieux de Ronaldo ?</span></div>
-      </div>
-      <div class="mcard">
-        <div class="mcard-top">
-          <div class="team-l"><div class="tname">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre</div><div class="coach">Tuchel</div></div>
-          <div style="text-align:center"><div class="scorebox" style="font-size:13px">vs</div><div style="margin-top:3px"><span class="badge b-up">23 juin</span></div></div>
-          <div class="team-r"><div class="tname">🇬🇭 Ghana</div><div class="coach">Otto Addo</div></div>
-        </div>
-        <div class="mcard-btm"><span>Groupe L · Dallas</span><span>—</span></div>
+      <div id="programme-list">
+        <div class="divider">Chargement du programme…</div>
       </div>
       <div class="divider">1/32 de finale — à partir du 28 juin</div>
       <div class="card">
@@ -904,6 +865,38 @@ function applyKpis(k){
   set('kc-permatch', String(k.cardsPerMatch).replace('.',','));
 }
 
+// Build the "Programme à venir" list from live + upcoming fixtures.
+function applyProgramme(events){
+  const el=document.getElementById('programme-list');
+  if (!el || !events || !events.length) return;
+  const up = events
+    .filter(e => e.status==='LIVE' || e.status==='NS')
+    .sort((a,b) => (a.status==='LIVE'?0:1)-(b.status==='LIVE'?0:1) || String(a.iso).localeCompare(String(b.iso)))
+    .slice(0,18);
+  if (!up.length){
+    el.innerHTML='<div class="card"><div class="card-body" style="font-size:12px;color:var(--text-secondary)">Plus de matchs à venir dans cette phase.</div></div>';
+    return;
+  }
+  let html='', lastDay='';
+  up.forEach(ev => {
+    const d = ev.iso ? new Date(ev.iso) : null;
+    const day = d ? d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}) : ev.date;
+    if (day !== lastDay){ html += `<div class="divider">${day}</div>`; lastDay = day; }
+    const live = ev.status==='LIVE';
+    const center = live
+      ? `<div class="scorebox">${ev.home.score??0}–${ev.away.score??0}</div><div style="margin-top:3px"><span class="badge b-live">EN DIRECT</span></div>`
+      : `<div class="scorebox" style="font-size:13px">vs</div><div style="margin-top:3px"><span class="badge b-up">${d?d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):''}</span></div>`;
+    html += `<div class="mcard"><div class="mcard-top">
+        <div class="team-l"><div class="tname">${dispTeam(ev.home.name)}</div></div>
+        <div style="text-align:center">${center}</div>
+        <div class="team-r"><div class="tname">${dispTeam(ev.away.name)}</div></div>
+      </div>
+      <div class="mcard-btm"><span>${ev.venue||'—'}</span><span>${live?statusFr(ev):'Coup d’envoi'}</span></div>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
 let refreshing=false;
 async function refreshLive(manual){
   if (refreshing) return; refreshing=true;
@@ -919,6 +912,7 @@ async function refreshLive(manual){
     applyScorers(data.scorers||[]);
     applyCards(data.reds||[], data.yellows||[]);
     applyKpis(data.kpis);
+    applyProgramme(data.events||[]);
     const t=new Date(data.updated||Date.now());
     document.getElementById('last-update').textContent =
       t.toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
