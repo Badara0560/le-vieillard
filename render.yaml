@@ -13,8 +13,10 @@ services:
     envVars:
       - key: REFRESH_MIN
         value: "8"
-      - key: PUSH_HOURS
-        value: "12"
+      - key: PUSH_AT
+        value: "8,19"          # Telegram digest at 8am & 7pm (Mali = UTC)
+      - key: NEWSLETTER_KEY
+        sync: false            # set a secret to enable the weekly Brief cron trigger
       - key: TELEGRAM_BOT_TOKEN
         sync: false
       - key: TELEGRAM_BOT_USERNAME

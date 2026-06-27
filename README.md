@@ -17,7 +17,7 @@ Optional config: `cp .env.example .env` and fill in (see below). It runs fine wi
 
 ## What it does
 
-- **`lib/feeds.js`** fetches 16 RSS feeds server-side (no CORS) — incl. the francophone business wires Agence Ecofin & Financial Afrik for the economy/FDI beat — parses RSS + Atom, strips HTML and feed boilerplate (incl. the Maliactu site-name junk), categorizes by keywords, dedupes, sorts newest-first, keeps the top 60.
+- **`lib/feeds.js`** fetches 15 RSS feeds server-side (no CORS) — incl. the francophone business wire Financial Afrik for the economy/FDI beat — parses RSS + Atom, strips HTML and feed boilerplate (incl. the Maliactu site-name junk), categorizes by keywords, dedupes, sorts newest-first, keeps the top 60.
 - **`lib/newsletter.js`** assembles **The West Africa Brief** (`Le Point Afrique de l'Ouest`) — a weekly business & geopolitics issue (ECOWAS + Sahel angle) auto-built from the live pool into an executive-scannable structure: **Macro Overview → Deep Dive (with a "why it matters" FDI lens) → Regional Briefs** (Markets & Currency, Sahel & Security, Tech & Telecoms, Mali). No fabricated analysis — it curates and groups real headlines, gated to West-Africa-relevant stories. Served bilingually at `/newsletter` (print-friendly).
 - **`lib/translate.js`** translates title + excerpt into the other language via Google's free endpoint (cached). Article bodies translate on demand at `/api/article/:id?lang=`.
 - **`server.js`** serves the app + API and re-fetches every `REFRESH_MIN` minutes. A per-minute clock tick pushes the Telegram digest at the fixed `PUSH_AT` hours (UTC; default `8,19` = 8am & 7pm Mali time) and sends the weekly Brief on its scheduled day/hour.
