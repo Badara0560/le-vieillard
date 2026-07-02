@@ -261,6 +261,23 @@
   /* ── Info banner ── */
   .info-banner { border-left: 2px solid var(--brand); background: var(--bg-secondary); border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: .55rem .75rem; font-size: 12px; color: var(--text-secondary); margin-bottom: .75rem; }
 
+  /* ── Match card meta line ── */
+  .mcard-meta { padding: .3rem .75rem; font-size: 10px; color: var(--text-tertiary); border-top: 0.5px solid var(--border); text-transform: uppercase; letter-spacing: .04em; background: var(--bg-secondary); }
+  .winner { font-weight: 700; }
+
+  /* ── Bracket (Tableau final) ── */
+  .bracket { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
+  .bcol { flex: 0 0 200px; display: flex; flex-direction: column; gap: 10px; }
+  .bcol-h { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-secondary); padding-bottom: 5px; border-bottom: 2px solid var(--border); }
+  .bmatch { border: 0.5px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: var(--bg-secondary); }
+  .brow { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; font-size: 12px; gap: 6px; }
+  .brow + .brow { border-top: 0.5px solid var(--border); }
+  .bteam { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bscore { font-weight: 600; color: var(--text-tertiary); flex: none; font-variant-numeric: tabular-nums; }
+  .bwin .bteam { font-weight: 700; }
+  .bwin .bscore { color: var(--text); }
+  .bnote { font-size: 10px; color: var(--text-tertiary); padding: 4px 10px; border-top: 0.5px solid var(--border); background: var(--bg); }
+
   /* ── Responsive: tablet ── */
   @media (max-width: 920px) {
     body { padding: .75rem; }
@@ -318,6 +335,7 @@
       <div class="nav-item active" onclick="nav('apercu',this)"><i class="ti ti-layout-dashboard"></i>Aperçu</div>
       <div class="nav-item" onclick="nav('matchs',this)"><i class="ti ti-ball-football"></i>Matchs</div>
       <div class="nav-item" onclick="nav('classement',this)"><i class="ti ti-table"></i>Classement</div>
+      <div class="nav-item" onclick="nav('bracket',this)"><i class="ti ti-tournament"></i>Tableau final</div>
       <div class="nav-item" onclick="nav('buteurs',this)"><i class="ti ti-award"></i>Buteurs</div>
       <div class="nav-item" onclick="nav('cartons',this)"><i class="ti ti-cards"></i>Cartons</div>
       <div class="nav-item" onclick="nav('programme',this)"><i class="ti ti-calendar"></i>Programme</div>
@@ -402,15 +420,15 @@
       <div class="pane-title">Résultats des matchs</div>
       <div class="filter-row">
         <input type="text" id="match-search" placeholder="Rechercher une équipe…" oninput="filterMatches()">
-        <select id="match-group" onchange="filterMatches()">
-          <option value="">Tous les groupes</option>
-          <option>Groupe A</option><option>Groupe B</option><option>Groupe C</option>
-          <option>Groupe D</option><option>Groupe E</option><option>Groupe F</option>
-          <option>Groupe G</option><option>Groupe H</option><option>Groupe I</option>
-        </select>
-        <select id="match-day" onchange="filterMatches()">
-          <option value="">Toutes les journées</option>
-          <option>J1</option><option>J2</option><option>J3</option>
+        <select id="match-stage" onchange="filterMatches()">
+          <option value="">Toutes les phases</option>
+          <option value="group-stage">Phase de groupes</option>
+          <option value="round-of-32">16es de finale</option>
+          <option value="round-of-16">8es de finale</option>
+          <option value="quarterfinals">Quarts de finale</option>
+          <option value="semifinals">Demi-finales</option>
+          <option value="third-place">Petite finale</option>
+          <option value="final">Finale</option>
         </select>
       </div>
       <div id="match-list"></div>
@@ -421,6 +439,12 @@
       <div class="pane-title">Classement par groupe</div>
       <div class="group-tabs" id="group-tabs"></div>
       <div id="standings-table"></div>
+    </div>
+
+    <!-- TABLEAU FINAL (BRACKET) -->
+    <div id="pane-bracket" class="pane">
+      <div class="pane-title">Tableau final</div>
+      <div id="bracket"><div class="divider">Chargement du tableau…</div></div>
     </div>
 
     <!-- BUTEURS -->
@@ -547,16 +571,12 @@ const matches = [
   {t1:'🇫🇷 France',c1:'Deschamps',t2:'🇮🇶 Irak',c2:'Casas',s:'1–0',st:'LIVE',g:'Groupe I',md:'J3',d:'22 juin',g1:'Mbappé 44\'',y2:'Al-Hamadi 38\''},
 ];
 
+// Matches are rendered from live ESPN data (renderMatchsLive). This runs on
+// search/stage-filter input; the snapshot renderer below is an offline fallback.
 function filterMatches() {
-  const search = document.getElementById('match-search').value.toLowerCase();
-  const group  = document.getElementById('match-group').value;
-  const md     = document.getElementById('match-day').value;
-  const filtered = matches.filter(m => {
-    const tm = !search || m.t1.toLowerCase().includes(search) || m.t2.toLowerCase().includes(search);
-    const gm = !group  || m.g === group;
-    const dm = !md     || m.md === md;
-    return tm && gm && dm;
-  });
+  if (typeof EVENTS !== 'undefined' && EVENTS.length) { renderMatchsLive(); return; }
+  const search = (document.getElementById('match-search').value||'').toLowerCase();
+  const filtered = matches.filter(m => !search || m.t1.toLowerCase().includes(search) || m.t2.toLowerCase().includes(search));
   renderMatches(filtered);
 }
 
@@ -740,20 +760,104 @@ const TEAMS = {
   colombia:'🇨🇴 Colombie', portugal:'🇵🇹 Portugal', uzbekistan:'🇺🇿 Ouzbékistan', congodr:'🇨🇩 RD Congo',
   england:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Angleterre', croatia:'🇭🇷 Croatie', panama:'🇵🇦 Panama', ghana:'🇬🇭 Ghana'
 };
-function dispTeam(name){ return TEAMS[norm(name)] || name; }
+function dispTeam(name){
+  const t = TEAMS[norm(name)];
+  if (t) return t;
+  // ESPN knockout placeholder ("Round of 16 1 Winner") → compact French
+  return String(name)
+    .replace(/Round of 32/gi, 'Vainq. 16e').replace(/Round of 16/gi, 'Vainq. 8e')
+    .replace(/Quarterfinals?/gi, 'Vainq. QF').replace(/Semifinals?/gi, 'Vainq. SF')
+    .replace(/\s*Winner\s*$/i, '').replace(/(Group [A-L])\s*(\d)\w*\s*Place/gi, '$1 #$2')
+    .trim();
+}
 function splitDisp(d){
   const i = String(d).indexOf(' ');
   if (i > 0){ const flag = d.slice(0, i); if (!/\p{L}/u.test(flag)) return { flag, name: d.slice(i + 1) }; }
   return { flag: '', name: d };
 }
 
-function matchOf(ev){
-  const h=teamKey(ev.home.name), a=teamKey(ev.away.name);
-  return matches.find(m => {
-    const t1=norm(m.t1), t2=norm(m.t2);
-    return (keyHit(h,t1)&&keyHit(a,t2)) || (keyHit(h,t2)&&keyHit(a,t1));
-  });
+// Live match + standings state, fully driven by ESPN (no snapshot overlay).
+let EVENTS = [], TABLE = [], liveGroup = null;
+const STAGE_FR = { 'group-stage':'Phase de groupes', 'round-of-32':'16es de finale', 'round-of-16':'8es de finale', 'quarterfinals':'Quarts de finale', 'semifinals':'Demi-finales', 'third-place':'Petite finale', 'final':'Finale' };
+const STAGE_ORDER = ['final','third-place','semifinals','quarterfinals','round-of-16','round-of-32','group-stage'];
+const KO_ROUNDS = ['round-of-32','round-of-16','quarterfinals','semifinals','final'];
+function fmtKick(e){ if(!e.iso) return ''; const d=new Date(e.iso); return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }
+function penScore(adv){ const m=(adv||'').match(/(\d+)\s*-\s*(\d+)/); return m?m[0]:''; }
+
+function evCard(e){
+  const ns=e.status==='NS', live=e.status==='LIVE';
+  const score = ns?'vs':`${e.home.score??0}–${e.away.score??0}`;
+  const badge = live?'<span class="badge b-live">EN DIRECT</span>':ns?('<span class="badge b-up">'+fmtKick(e)+'</span>'):'<span class="badge b-ft">Terminé</span>';
+  const hG=goalsLine(e.goals.filter(g=>g.side==='home')), aG=goalsLine(e.goals.filter(g=>g.side==='away'));
+  const y1=cardsStr(e.cards,'home','Y'),y2=cardsStr(e.cards,'away','Y'),r1=cardsStr(e.cards,'home','R'),r2=cardsStr(e.cards,'away','R');
+  const wH=e.winner==='home'?' winner':'', wA=e.winner==='away'?' winner':'';
+  const noteLine=e.note?('<div style="font-size:10px;color:var(--text-tertiary);margin-top:2px">'+e.note+(penScore(e.adv)?(' '+penScore(e.adv)):'')+'</div>'):'';
+  const meta=(e.stage==='group-stage'?('Groupe '+e.group):(STAGE_FR[e.stage]||''))+(e.venue?(' · '+e.venue):'');
+  const g1=hG?('⚽ '+hG):'—', g2=aG?('⚽ '+aG):'—';
+  return `<div class="mcard">
+    <div class="mcard-top">
+      <div class="team-l"><div class="tname${wH}">${dispTeam(e.home.name)}</div></div>
+      <div style="text-align:center"><div class="scorebox">${score}</div><div style="margin-top:3px">${badge}</div>${noteLine}</div>
+      <div class="team-r"><div class="tname${wA}">${dispTeam(e.away.name)}</div></div>
+    </div>
+    <div class="mcard-btm">
+      <div>${g1}${y1?' <span class="yc"></span>'+y1:''}${r1?' <span class="rc"></span>'+r1:''}</div>
+      <div>${g2}${y2?' <span class="yc"></span>'+y2:''}${r2?' <span class="rc"></span>'+r2:''}</div>
+    </div>
+    <div class="mcard-meta">${meta}</div>
+  </div>`;
 }
+
+function renderMatchsLive(){
+  const el=document.getElementById('match-list'); if(!el||!EVENTS.length) return;
+  const q=(document.getElementById('match-search').value||'').toLowerCase();
+  const sf=(document.getElementById('match-stage')||{}).value||'';
+  let evs=EVENTS.filter(e=>{
+    if(sf && e.stage!==sf) return false;
+    if(q){ const s=(dispTeam(e.home.name)+' '+dispTeam(e.away.name)+' '+e.home.name+' '+e.away.name).toLowerCase(); if(!s.includes(q)) return false; }
+    return true;
+  });
+  evs.sort((a,b)=>{ const so=STAGE_ORDER.indexOf(a.stage)-STAGE_ORDER.indexOf(b.stage); if(so) return so; return String(b.iso).localeCompare(String(a.iso)); });
+  if(!evs.length){ el.innerHTML='<div style="padding:1rem;text-align:center;color:var(--text-secondary)">Aucun match trouvé</div>'; return; }
+  let html='', last='';
+  evs.forEach(e=>{ const lbl=STAGE_FR[e.stage]||e.stage; if(lbl!==last){ html+=`<div class="divider">${lbl}</div>`; last=lbl; } html+=evCard(e); });
+  el.innerHTML=html;
+}
+
+function renderBracket(){
+  const el=document.getElementById('bracket'); if(!el) return;
+  const rounds=KO_ROUNDS.filter(s=>EVENTS.some(e=>e.stage===s));
+  if(!rounds.length){ el.innerHTML='<div style="padding:1.5rem;text-align:center;color:var(--text-secondary)">Le tableau final commence après la phase de groupes.</div>'; return; }
+  const col=s=>{
+    const evs=EVENTS.filter(e=>e.stage===s).sort((a,b)=>String(a.iso).localeCompare(String(b.iso)));
+    const cards=evs.map(e=>{
+      const ns=e.status==='NS';
+      const hs=ns?'':(e.home.score??0), as=ns?'':(e.away.score??0);
+      const brow=(name,sc,win)=>`<div class="brow${win?' bwin':''}"><span class="bteam">${name}</span><span class="bscore">${sc}</span></div>`;
+      const foot=ns?('<div class="bnote">'+fmtKick(e)+'</div>'):(e.note?('<div class="bnote">'+e.note+(penScore(e.adv)?(' '+penScore(e.adv)):'')+'</div>'):'');
+      return `<div class="bmatch">${brow(dispTeam(e.home.name),hs,e.winner==='home')}${brow(dispTeam(e.away.name),as,e.winner==='away')}${foot}</div>`;
+    }).join('');
+    return `<div class="bcol"><div class="bcol-h">${STAGE_FR[s]}</div>${cards}</div>`;
+  };
+  el.innerHTML=`<div class="bracket">${rounds.map(col).join('')}</div>`;
+}
+
+function selectGroupLive(g){ liveGroup=g; renderStandingsLive(TABLE); }
+function renderStandingsLive(table){
+  if(!table||!table.length) return;
+  TABLE=table;
+  const gs=[...new Set(table.map(r=>r.group))].filter(Boolean).sort();
+  if(!liveGroup||!gs.includes(liveGroup)) liveGroup=gs[0];
+  document.getElementById('group-tabs').innerHTML=gs.map(g=>`<div class="gtab${g===liveGroup?' active':''}" onclick="selectGroupLive('${g}')">Groupe ${g}</div>`).join('');
+  const rows=table.filter(r=>r.group===liveGroup).sort((a,b)=>b.points-a.points||(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf);
+  let html=`<div class="card"><div class="card-body" style="padding:0"><table>
+    <tr><th>Équipe</th><th>J</th><th>V</th><th>N</th><th>D</th><th>BP</th><th>BC</th><th>DB</th><th>Pts</th></tr>`;
+  rows.forEach((r,i)=>{ const gd=r.gf-r.ga; html+=`<tr${i<2?' class="q"':''}><td style="font-weight:500">${dispTeam(r.team)}</td><td>${r.played}</td><td>${r.win}</td><td>${r.draw}</td><td>${r.loss}</td><td>${r.gf}</td><td>${r.ga}</td><td>${gd>=0?'+'+gd:gd}</td><td><b>${r.points}</b></td></tr>`; });
+  html+=`</table></div><div style="padding:.5rem 1rem;font-size:11px;color:var(--text-secondary);border-top:0.5px solid var(--border)">
+    <span style="display:inline-block;width:10px;height:10px;background:rgba(27,107,70,.15);border:0.5px solid var(--green);border-radius:2px;margin-right:4px"></span>Qualifié pour les 16es de finale</div></div>`;
+  document.getElementById('standings-table').innerHTML=html;
+}
+
 function goalsLine(goals){
   return goals.map(g => g.who ? `${g.who} ${g.min}${g.own?' (csc)':g.pen?' (pen)':''}` : '').filter(Boolean).join(', ');
 }
@@ -785,44 +889,11 @@ function renderLiveCard(ev, isLive){
     <div style="margin-top:8px;font-size:11px;color:var(--text-secondary)">${gl?('⚽ '+gl+' &nbsp;|&nbsp; '):''}${statusFr(ev)}</div>`;
 }
 
-// Overlay real scores + scorers + cards onto the snapshot match list.
-function applyEvents(events){
-  if (!events || !events.length) return;
-  let liveEv=null, lastFt=null;
-  events.forEach(ev => {
-    if (ev.status==='LIVE' && !liveEv) liveEv=ev;
-    if (ev.status==='FT' && (!lastFt || ev.date > lastFt.date)) lastFt=ev;
-    if ((ev.status!=='FT' && ev.status!=='LIVE') || ev.home.score==null || ev.away.score==null) return;
-    const m = matchOf(ev); if (!m) return;
-    const homeIsT1 = keyHit(teamKey(ev.home.name), norm(m.t1));
-    const hs=ev.home.score, as=ev.away.score;
-    m.s  = homeIsT1 ? `${hs}–${as}` : `${as}–${hs}`;
-    m.st = ev.status==='LIVE' ? 'LIVE' : 'FT';
-    const homeG=goalsLine(ev.goals.filter(g=>g.side==='home')), awayG=goalsLine(ev.goals.filter(g=>g.side==='away'));
-    m.g1 = homeIsT1 ? homeG : awayG;  m.g2 = homeIsT1 ? awayG : homeG;
-    m.y1 = cardsStr(ev.cards, homeIsT1?'home':'away','Y'); m.y2 = cardsStr(ev.cards, homeIsT1?'away':'home','Y');
-    m.r1 = cardsStr(ev.cards, homeIsT1?'home':'away','R'); m.r2 = cardsStr(ev.cards, homeIsT1?'away':'home','R');
-  });
+// Update the Aperçu "live / last match" card from ESPN events.
+function updateLiveCard(){
+  const liveEv=EVENTS.find(e=>e.status==='LIVE');
+  const lastFt=EVENTS.filter(e=>e.status==='FT').sort((a,b)=>String(b.iso).localeCompare(String(a.iso)))[0];
   renderLiveCard(liveEv||lastFt, !!liveEv);
-  filterMatches();
-}
-
-// Update group standings from the live table.
-function applyTable(table){
-  if (!table || !table.length) return;
-  const touched = new Set();
-  table.forEach(row => {
-    const arr = groups[row.group]; if (!arr) return;
-    const tk = teamKey(row.team);
-    const r = arr.find(x => keyHit(tk, norm(x[0])));
-    if (r){ r[1]=row.played; r[2]=row.win; r[3]=row.draw; r[4]=row.loss; r[5]=row.gf; r[6]=row.ga; r[7]=row.points; touched.add(row.group); }
-  });
-  touched.forEach(g => {
-    const arr = groups[g];
-    const order = [...arr].sort((a,b) => b[7]-a[7] || (b[5]-b[6])-(a[5]-a[6]) || b[5]-a[5]);
-    arr.forEach(r => r[8] = order.indexOf(r) < 2);
-  });
-  renderStandings();
 }
 
 // Rebuild the scorers list (Buteurs + Aperçu) from real data.
@@ -914,8 +985,11 @@ async function refreshLive(manual){
   try{
     const r=await fetch('/api/worldcup/live',{cache:'no-store'});
     const data=await r.json();
-    applyEvents(data.events||[]);
-    applyTable(data.table||[]);
+    EVENTS = data.events || [];
+    renderMatchsLive();
+    renderBracket();
+    renderStandingsLive(data.table||[]);
+    updateLiveCard();
     applyScorers(data.scorers||[]);
     applyCards(data.reds||[], data.yellows||[]);
     applyKpis(data.kpis);
