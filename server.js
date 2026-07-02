@@ -169,6 +169,41 @@ function readBody(req){
   });
 }
 
+/* ---- simple in-memory rate limiting ---- */
+const rl = new Map();   // key -> { count, reset }
+function clientIp(req){
+  return (req.headers['x-forwarded-for'] || '').split(',')[0].trim()
+    || req.socket.remoteAddress || 'unknown';
+}
+/* Returns true if the request is allowed, false if over the limit. */
+function rateLimit(key, max, windowMs){
+  const now = Date.now();
+  const e = rl.get(key);
+  if (!e || now > e.reset) { rl.set(key, { count: 1, reset: now + windowMs }); return true; }
+  if (e.count >= max) return false;
+  e.count++;
+  return true;
+}
+setInterval(() => { const now = Date.now(); for (const [k, v] of rl) if (now > v.reset) rl.delete(k); }, 60000).unref();
+
+const SECURITY_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'SAMEORIGIN',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
+  'Content-Security-Policy': [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
+    "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:",
+    "img-src 'self' https: http: data:",
+    "connect-src 'self'",
+    "frame-ancestors 'self'",
+    "base-uri 'self'",
+    "object-src 'none'"
+  ].join('; ')
+};
+
 /* News list shaped for the frontend (computes age at request time). */
 function newsPayload(){
   const now = Date.now();
@@ -188,6 +223,9 @@ function newsPayload(){
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const p = url.pathname;
+
+  // Security headers on every response
+  for (const [k, v] of Object.entries(SECURITY_HEADERS)) res.setHeader(k, v);
 
   // CORS for the API (handy if the frontend is hosted separately)
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -231,6 +269,8 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (p.startsWith('/api/article/')) {
+      // translation can hit an external service — cap per IP
+      if (!rateLimit('art:' + clientIp(req), 60, 60000)) return sendJSON(res, 429, { error: 'slow down' });
       const id = +p.split('/').pop();
       const lang = url.searchParams.get('lang') === 'en' ? 'en' : 'fr';
       const a = state.articles.find(x => x.id === id);
@@ -240,6 +280,8 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (p === '/api/subscribe' && req.method === 'POST') {
+      // prevent subscriber-list flooding
+      if (!rateLimit('sub:' + clientIp(req), 5, 10 * 60000)) return sendJSON(res, 429, { error: 'too many attempts, try later' });
       const raw = await readBody(req);
       let payload = {};
       try { payload = JSON.parse(raw || '{}'); } catch { /* ignore */ }
