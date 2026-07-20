@@ -29,6 +29,7 @@ const newsletter = require('./lib/newsletter');
 const worldcup   = require('./lib/worldcup');
 const render     = require('./lib/render');
 const dailybrief = require('./lib/dailybrief');
+const email      = require('./lib/email');
 
 const PORT        = +(process.env.PORT || 8132);
 const REFRESH_MIN = +(process.env.REFRESH_MIN || 8);    // website feed refresh
@@ -81,9 +82,11 @@ async function sendDaily(force){
     waFr: dailybrief.formatWhatsApp(daily, 'fr'),
     waEn: dailybrief.formatWhatsApp(daily, 'en')
   });
+  // E-mail subscribers get the same edition through Brevo.
+  const mailRes = await email.sendBriefEmails(store.load().email || [], daily, daily);
   store.setMeta('lastDailyBriefDay', day);
   store.setMeta('lastDailyBriefAt', new Date().toISOString());
-  return { ...res, day, items: daily.items.length };
+  return { ...res, email: mailRes, day, items: daily.items.length };
 }
 
 /* Fire the Brief at the fixed hour (checked every minute). */
@@ -234,11 +237,13 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
 
+  /* Requested language — one declaration for every route below. */
+  const lang = url.searchParams.get('lang') === 'en' ? 'en' : 'fr';
+
   try {
     if (p === '/api/news') return sendJSON(res, 200, newsPayload());
 
     if (p === '/api/newsletter') {
-      const lang = url.searchParams.get('lang') === 'en' ? 'en' : 'fr';
       return sendJSON(res, 200, newsletter.buildIssue(state.articles, lang));
     }
 
@@ -249,7 +254,6 @@ const server = http.createServer(async (req, res) => {
 
     /* ---- Phase 2: daily Brief endpoints ---- */
     if (p === '/api/brief/daily') {
-      const lang = url.searchParams.get('lang') === 'en' ? 'en' : 'fr';
       const daily = dailybrief.buildDaily(state.articles);
       return sendJSON(res, 200, { ...daily, lang });
     }
@@ -257,7 +261,6 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/brief/whatsapp') {
       if (!NL_KEY) return sendJSON(res, 404, { error: 'not enabled' });
       if (url.searchParams.get('key') !== NL_KEY) return sendJSON(res, 403, { error: 'forbidden' });
-      const lang = url.searchParams.get('lang') === 'en' ? 'en' : 'fr';
       const txt = dailybrief.formatWhatsApp(dailybrief.buildDaily(state.articles), lang);
       res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' });
       return res.end(txt);
@@ -310,11 +313,25 @@ const server = http.createServer(async (req, res) => {
       // translation can hit an external service — cap per IP
       if (!rateLimit('art:' + clientIp(req), 60, 60000)) return sendJSON(res, 429, { error: 'slow down' });
       const id = +p.split('/').pop();
-      const lang = url.searchParams.get('lang') === 'en' ? 'en' : 'fr';
       const a = state.articles.find(x => x.id === id);
       if (!a) return sendJSON(res, 404, { error: 'not found' });
       const body = await feeds.translateBody(a, lang);
       return sendJSON(res, 200, { id, lang, body });
+    }
+
+    /* One-click unsubscribe (linked from every e-mail). */
+    if (p === '/unsubscribe') {
+      const addr = (url.searchParams.get('e') || '').trim().toLowerCase();
+      let removed = false;
+      if (addr) {
+        const d = store.load();
+        const before = (d.email || []).length;
+        d.email = (d.email || []).filter(s => String(s.contact).toLowerCase() !== addr);
+        if (d.email.length !== before) { store.save(d); removed = true; }
+      }
+      const html = render.unsubscribed(lang, removed);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      return res.end(html);
     }
 
     if (p === '/api/subscribe' && req.method === 'POST') {
@@ -324,6 +341,9 @@ const server = http.createServer(async (req, res) => {
       let payload = {};
       try { payload = JSON.parse(raw || '{}'); } catch { /* ignore */ }
       const result = store.addSubscriber(payload);
+      /* Be honest: if e-mail delivery isn't wired yet, say "you're on the list",
+         not "it's done" — the confirmation must match what will actually happen. */
+      if (result.ok && result.channel === 'email' && !email.configured()) result.pending = true;
       return sendJSON(res, result.ok ? 200 : 400, result);
     }
 
@@ -343,7 +363,6 @@ const server = http.createServer(async (req, res) => {
     }
 
     // ---- server-rendered pages (« Le Fil ») ----
-    const lang = url.searchParams.get('lang') === 'en' ? 'en' : 'fr';
     if (p === '/' || p === '/index.html') {
       const html = render.home(state.articles, lang, dailybrief.buildDaily(state.articles));
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=120' });
