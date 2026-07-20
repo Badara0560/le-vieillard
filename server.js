@@ -27,6 +27,7 @@ const store      = require('./lib/store');
 const notify     = require('./lib/notify');
 const newsletter = require('./lib/newsletter');
 const worldcup   = require('./lib/worldcup');
+const render     = require('./lib/render');
 
 const PORT        = +(process.env.PORT || 8132);
 const REFRESH_MIN = +(process.env.REFRESH_MIN || 8);    // website feed refresh
@@ -152,7 +153,8 @@ function sendJSON(res, code, obj){
 
 function serveStatic(res, file){
   const full = path.join(PUBLIC, file);
-  if (!full.startsWith(PUBLIC)) { res.writeHead(403); return res.end('Forbidden'); }
+  // + path.sep: without it, a sibling dir like ".../publicX" would pass the check
+  if (full !== PUBLIC && !full.startsWith(PUBLIC + path.sep)) { res.writeHead(403); return res.end('Forbidden'); }
   fs.readFile(full, (err, data) => {
     if (err) { res.writeHead(404); return res.end('Not found'); }
     res.writeHead(200, { 'Content-Type': MIME[path.extname(full)] || 'application/octet-stream' });
@@ -290,6 +292,13 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (p === '/api/telegram/webhook' && req.method === 'POST') {
+      /* If TELEGRAM_WEBHOOK_SECRET is set (pass secret_token to setWebhook),
+         reject updates that don't carry it — otherwise anyone can forge /start
+         updates and flood the subscriber list. Unset = legacy open behaviour. */
+      const secret = process.env.TELEGRAM_WEBHOOK_SECRET || '';
+      if (secret && req.headers['x-telegram-bot-api-secret-token'] !== secret) {
+        return sendJSON(res, 403, { error: 'forbidden' });
+      }
       const raw = await readBody(req);
       let update = {};
       try { update = JSON.parse(raw || '{}'); } catch { /* ignore */ }
@@ -297,8 +306,22 @@ const server = http.createServer(async (req, res) => {
       return sendJSON(res, 200, { ok: true });
     }
 
+    // ---- server-rendered pages (« Le Fil ») ----
+    const lang = url.searchParams.get('lang') === 'en' ? 'en' : 'fr';
+    if (p === '/' || p === '/index.html') {
+      const html = render.home(state.articles, lang);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=120' });
+      return res.end(html);
+    }
+    if (/^\/a\/\d+$/.test(p)) {
+      const html = render.story(state.articles, +p.split('/').pop(), lang);
+      if (!html) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Article introuvable'); }
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300' });
+      return res.end(html);
+    }
+
     // ---- static / pages ----
-    if (p === '/' || p === '/index.html') return serveStatic(res, 'index.html');
+    if (p === '/ancien' || p === '/legacy') return serveStatic(res, 'index.html');
     if (p === '/subscribe' || p === '/landing' || p === '/subscribe.html') return serveStatic(res, 'landing.html');
     if (p === '/newsletter' || p === '/brief' || p === '/newsletter.html') return serveStatic(res, 'newsletter.html');
     if (p === '/worldcup' || p === '/coupe-du-monde' || p === '/mondial' || p === '/worldcup.html') return serveStatic(res, 'worldcup.html');

@@ -1,0 +1,13 @@
+{
+  "name": "Le Vieillard — L'actualité du Mali et de l'Afrique",
+  "short_name": "Le Vieillard",
+  "description": "Le moyen le plus rapide et le plus propre de savoir ce qui se passe au Mali, au Sahel et en Afrique.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf6ee",
+  "theme_color": "#1b6b46",
+  "lang": "fr",
+  "icons": [
+    { "src": "/placeholder.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
