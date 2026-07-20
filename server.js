@@ -28,28 +28,17 @@ const notify     = require('./lib/notify');
 const newsletter = require('./lib/newsletter');
 const worldcup   = require('./lib/worldcup');
 const render     = require('./lib/render');
+const dailybrief = require('./lib/dailybrief');
 
 const PORT        = +(process.env.PORT || 8132);
 const REFRESH_MIN = +(process.env.REFRESH_MIN || 8);    // website feed refresh
-/* Telegram digest now fires at fixed clock hours (UTC) instead of a rolling
-   interval. Mali runs on GMT (UTC+0), so "8,19" = 8am & 7pm local. */
-const PUSH_AT     = (process.env.PUSH_AT || '8,19').split(',')
-  .map(n => +n.trim()).filter(n => Number.isInteger(n) && n >= 0 && n < 24);
+/* Phase 2: ONE daily Brief at a fixed morning hour (UTC = Bamako time).
+   Fixed time is the habit mechanic — same hour every day, no surprises. */
+const BRIEF_AT    = +(process.env.BRIEF_AT ?? 7);        // 7:00 Bamako
 const NL_DAY      = +(process.env.NEWSLETTER_DAY ?? 1);  // weekly Brief: 0=Sun … 1=Mon
 const NL_HOUR     = +(process.env.NEWSLETTER_HOUR ?? 8); // hour (UTC) to send the Brief
 const NL_KEY      = process.env.NEWSLETTER_KEY || '';    // secret for the manual/cron trigger
 const PUBLIC      = path.join(__dirname, 'public');
-
-/* Widest gap (hours) between two consecutive push times — the digest window, so
-   nothing published between sends is missed (the per-article dedupe avoids
-   repeats on overlap). E.g. [8,19] → gaps 11h & 13h → window 13h. */
-const PUSH_WINDOW = (() => {
-  if (PUSH_AT.length < 2) return 24;
-  const h = [...PUSH_AT].sort((a, b) => a - b);
-  let max = h[0] + 24 - h[h.length - 1];                 // wrap-around gap
-  for (let i = 1; i < h.length; i++) max = Math.max(max, h[i] - h[i - 1]);
-  return max;
-})();
 
 const state = { articles: [], updated: null, building: false, seeded: false };
 
@@ -77,27 +66,37 @@ async function refresh(){
   }
 }
 
-/* Push a digest to Telegram. Window covers the gap since the previous send so
-   nothing is missed; per-article dedupe prevents repeats on overlap. */
-async function pushCycle(){
-  try {
-    const res = await notify.pushDigest(state.articles, PUSH_WINDOW);
-    console.log(`[push] ${new Date().toISOString()} | ${JSON.stringify(res)}`);
-  } catch (e) {
-    console.error('[push] error:', e.message);
-  }
+/* Build + send the daily Brief. Once-per-day guard persists in the store, so a
+   process restart can't cause a duplicate send. `force` bypasses the guard
+   (manual/cron trigger). */
+async function sendDaily(force){
+  if (!state.articles.length) return { ok: false, error: 'no articles yet' };
+  const day = new Date().toISOString().slice(0, 10);
+  if (!force && store.getMeta('lastDailyBriefDay') === day) return { ok: false, skipped: 'already sent today' };
+  const daily = dailybrief.buildDaily(state.articles);
+  if (!daily.items.length) return { ok: false, error: 'no fresh items' };
+  const res = await notify.sendDailyBrief({
+    tgFr: dailybrief.formatTelegram(daily, 'fr'),
+    tgEn: dailybrief.formatTelegram(daily, 'en'),
+    waFr: dailybrief.formatWhatsApp(daily, 'fr'),
+    waEn: dailybrief.formatWhatsApp(daily, 'en')
+  });
+  store.setMeta('lastDailyBriefDay', day);
+  store.setMeta('lastDailyBriefAt', new Date().toISOString());
+  return { ...res, day, items: daily.items.length };
 }
 
-/* Fire the digest at fixed UTC hours (PUSH_AT). Guarded so it sends at most once
-   per hour-slot even though the clock is checked every minute. */
-let lastPushSlot = null;
-async function pushCheck(){
-  const now = new Date();
-  if (!PUSH_AT.includes(now.getUTCHours())) return;
-  const slot = now.toISOString().slice(0, 13);   // yyyy-mm-ddThh
-  if (lastPushSlot === slot) return;
-  lastPushSlot = slot;
-  await pushCycle();
+/* Fire the Brief at the fixed hour (checked every minute). */
+async function briefCheck(){
+  try {
+    const now = new Date();
+    if (now.getUTCHours() !== BRIEF_AT) return;
+    if (store.getMeta('lastDailyBriefDay') === now.toISOString().slice(0, 10)) return;
+    const res = await sendDaily(false);
+    console.log(`[brief] daily send → ${JSON.stringify(res)}`);
+  } catch (e) {
+    console.error('[brief] check error:', e.message);
+  }
 }
 
 /* ISO-8601 week key (e.g. "2026-W25") — used so the weekly Brief fires at most
@@ -248,6 +247,43 @@ const server = http.createServer(async (req, res) => {
       catch (e) { return sendJSON(res, 200, { updated: new Date().toISOString(), events: [], error: e.message }); }
     }
 
+    /* ---- Phase 2: daily Brief endpoints ---- */
+    if (p === '/api/brief/daily') {
+      const lang = url.searchParams.get('lang') === 'en' ? 'en' : 'fr';
+      const daily = dailybrief.buildDaily(state.articles);
+      return sendJSON(res, 200, { ...daily, lang });
+    }
+    /* WhatsApp-formatted text for manual channel posting (copy-paste ready). */
+    if (p === '/api/brief/whatsapp') {
+      if (!NL_KEY) return sendJSON(res, 404, { error: 'not enabled' });
+      if (url.searchParams.get('key') !== NL_KEY) return sendJSON(res, 403, { error: 'forbidden' });
+      const lang = url.searchParams.get('lang') === 'en' ? 'en' : 'fr';
+      const txt = dailybrief.formatWhatsApp(dailybrief.buildDaily(state.articles), lang);
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' });
+      return res.end(txt);
+    }
+    /* Manual/cron trigger for the daily Brief (external cron beats in-process
+       timers on a sleepy free host). force=1 bypasses the once-per-day guard. */
+    if (p === '/api/brief/send') {
+      if (!NL_KEY) return sendJSON(res, 404, { error: 'not enabled' });
+      if (url.searchParams.get('key') !== NL_KEY) return sendJSON(res, 403, { error: 'forbidden' });
+      return sendJSON(res, 200, await sendDaily(url.searchParams.get('force') === '1'));
+    }
+    /* Click metrics — the honest engagement number. */
+    if (p === '/api/metrics') {
+      if (!NL_KEY) return sendJSON(res, 404, { error: 'not enabled' });
+      if (url.searchParams.get('key') !== NL_KEY) return sendJSON(res, 403, { error: 'forbidden' });
+      const clicks = store.getClicks();
+      const days = Object.keys(clicks).sort();
+      const last7 = days.slice(-7).reduce((acc, d) => {
+        for (const [ch, n] of Object.entries(clicks[d])) acc[ch] = (acc[ch] || 0) + n;
+        return acc;
+      }, {});
+      return sendJSON(res, 200, { subscribers: store.counts(), clicksLast7Days: last7,
+        clicksByDay: Object.fromEntries(days.slice(-14).map(d => [d, clicks[d]])),
+        lastBrief: store.getMeta('lastDailyBriefAt') || null });
+    }
+
     /* Key-guarded trigger so an external weekly cron can push the Brief
        reliably (in-process timers reset when a sleepy free host restarts). */
     if (p === '/api/newsletter/send') {
@@ -309,11 +345,14 @@ const server = http.createServer(async (req, res) => {
     // ---- server-rendered pages (« Le Fil ») ----
     const lang = url.searchParams.get('lang') === 'en' ? 'en' : 'fr';
     if (p === '/' || p === '/index.html') {
-      const html = render.home(state.articles, lang);
+      const html = render.home(state.articles, lang, dailybrief.buildDaily(state.articles));
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=120' });
       return res.end(html);
     }
     if (/^\/a\/\d+$/.test(p)) {
+      // Brief links carry ?c=tg|wa|nl — count the click (fire-and-forget)
+      const ch = url.searchParams.get('c');
+      if (ch) { try { store.bumpClick(ch); } catch { /* never block the page */ } }
       const html = render.story(state.articles, +p.split('/').pop(), lang);
       if (!html) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Article introuvable'); }
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300' });
@@ -323,7 +362,8 @@ const server = http.createServer(async (req, res) => {
     if (p === '/subscribe' || p === '/landing' || p === '/subscribe.html') {
       const html = render.subscribe(lang, {
         telegramBot: process.env.TELEGRAM_BOT_USERNAME || '',
-        telegramChannel: (process.env.TELEGRAM_CHANNEL || '').replace(/^@/, '')
+        telegramChannel: (process.env.TELEGRAM_CHANNEL || '').replace(/^@/, ''),
+        waChannel: process.env.WHATSAPP_CHANNEL_URL || ''
       });
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=600' });
       return res.end(html);
@@ -349,11 +389,11 @@ server.listen(PORT, () => {
   console.log(`  News app: /   ·   Subscribe: /subscribe   ·   API: /api/news`);
   const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   console.log(`  Push configured: ${notify.isConfigured()} | feed refresh ${REFRESH_MIN} min`);
-  console.log(`  Telegram digest at ${PUSH_AT.map(h => h + ':00').join(' & ')} UTC (window ${PUSH_WINDOW}h)`);
-  console.log(`  Weekly Brief: ${dayNames[NL_DAY]} ${NL_HOUR}:00 UTC | cron trigger ${NL_KEY ? 'enabled' : 'disabled (set NEWSLETTER_KEY)'}\n`);
+  console.log(`  Daily Brief at ${BRIEF_AT}:00 UTC (Bamako time) | cron trigger ${NL_KEY ? 'enabled' : 'disabled (set NEWSLETTER_KEY)'}`);
+  console.log(`  Weekly Point: ${dayNames[NL_DAY]} ${NL_HOUR}:00 UTC\n`);
   refresh();
   setInterval(refresh, REFRESH_MIN * 60 * 1000);
-  /* One clock tick a minute drives both schedulers (digest at PUSH_AT hours,
-     weekly Brief on its day/hour) — accurate to within a minute of the hour. */
-  setInterval(() => { pushCheck(); newsletterCheck(); }, 60 * 1000);
+  /* One clock tick a minute drives both schedulers (daily Brief at BRIEF_AT,
+     weekly Point on its day/hour) — accurate to within a minute of the hour. */
+  setInterval(() => { briefCheck(); newsletterCheck(); }, 60 * 1000);
 });
