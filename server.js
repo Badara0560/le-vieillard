@@ -320,10 +320,22 @@ const server = http.createServer(async (req, res) => {
       return res.end(html);
     }
 
-    // ---- static / pages ----
+    if (p === '/subscribe' || p === '/landing' || p === '/subscribe.html') {
+      const html = render.subscribe(lang, {
+        telegramBot: process.env.TELEGRAM_BOT_USERNAME || '',
+        telegramChannel: (process.env.TELEGRAM_CHANNEL || '').replace(/^@/, '')
+      });
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=600' });
+      return res.end(html);
+    }
+    if (p === '/newsletter' || p === '/brief' || p === '/newsletter.html') {
+      const html = render.brief(newsletter.buildIssue(state.articles, lang), lang);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300' });
+      return res.end(html);
+    }
+
+    // ---- static / legacy pages ----
     if (p === '/ancien' || p === '/legacy') return serveStatic(res, 'index.html');
-    if (p === '/subscribe' || p === '/landing' || p === '/subscribe.html') return serveStatic(res, 'landing.html');
-    if (p === '/newsletter' || p === '/brief' || p === '/newsletter.html') return serveStatic(res, 'newsletter.html');
     if (p === '/worldcup' || p === '/coupe-du-monde' || p === '/mondial' || p === '/worldcup.html') return serveStatic(res, 'worldcup.html');
     return serveStatic(res, p.replace(/^\/+/, ''));
   } catch (e) {
